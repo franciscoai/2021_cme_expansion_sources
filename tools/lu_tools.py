@@ -1,6 +1,8 @@
 import pandas as pd
 import gspread as gs #use google apis to read cmes info from google spreadsheet
 import os
+import drms
+
 
 #Random tools for wrking with solar physics data.
 
@@ -35,3 +37,24 @@ def google_to_csv(gtitle,fname):
 
     dataframe.to_csv(savepath, sep=",")
 
+def drms_download(user_email="lucianomerenda3@gmail.com",download_dir="/gehme/data/sdo/hmi/sharps/"):
+
+    # set the drms client
+    drms_client = drms.Client(email=user_email, verbose=True)
+
+    # Lets create the export request shall we?
+    ds_selected = "hmi.sharp_cea_720s"
+    harpnum = "[]"
+    start_time = input("#Enter start time (Time format example = 2010.12.12_00:00:00_TAI")
+    end_time = input("Enter end time (Same format as start time)")
+    time_window = f"[{start_time}-{end_time}]"
+    segments_selected = "{Bp,Bt,Br}"
+
+    ds_needed = ds_selected + harpnum + time_window + segments_selected
+    export_request = drms_client.export(ds_needed, method='url', protocol='fits')
+
+    # Wait for the server to prepare requested files
+    export_request.wait()
+
+    # Then download files
+    export_request.download(download_dir)
