@@ -31,7 +31,7 @@ def noaa2harpnum(noaa):
 
     return harpnum
 
-def drms_download(start_time,end_time,instrument="hmi",type="sharp",data_series="",segments="",user_email="lucianomerenda3@gmail.com"):
+def drms_download(start_time,end_time="",time_span="",cadence="",instrument="hmi",data_series="",segments="",noaa="",wavelength="",user_email="lucianomerenda3@gmail.com"):
 
     # vso type  client for downloading data from sdo and soho/mdi.
     # Parameters:
@@ -40,6 +40,17 @@ def drms_download(start_time,end_time,instrument="hmi",type="sharp",data_series=
     #   type can be sharp, L1 depends on the instrument
     #   segments depends on the type of data
 
+    #Check time window
+    if end_time == "":
+        if time_span != "":
+            time_window = f"[{start_time}/{time_span}]"
+        elif time_span != "" and cadence != "":
+            time_window = f"[{start_time}/{time_span}@{cadence}]"
+        else:
+            raise RuntimeError("Please specify end_time or time_span or cadence & time_span of time")
+    else:
+        # Enter start and end timee
+        time_window = f"[{start_time}-{end_time}]"
 
     # set the drms client
     drms_client = drms.Client(email=user_email, verbose=True)
@@ -64,21 +75,30 @@ def drms_download(start_time,end_time,instrument="hmi",type="sharp",data_series=
 
         segments_selected = "{" + input("Enter segments name separated by a comma: ") + "}"
     else:
-        segments_selected = segments
+        segments_selected = "{" + segments + "}"
 
     #Check if we need a harpnum for the data series selected
+    #ir if we need the wavelength for aia data
     if "HARPNUM" in drms_client.pkeys(ds_selected):
-        noaa_input = input("Enter NOAA number: ")
-        harpnum = "[" + noaa2harpnum(noaa_input) + "]" #only for sharps and smarps
+        if noaa == "":
+            noaa_input = input("Enter NOAA number: ")
+            harpnum = "[" + noaa2harpnum(noaa_input) + "]" #only for sharps
+        else:
+            harpnum = "[" + noaa2harpnum(noaa) + "]"
     else:
         harpnum = ""
 
-    #Enter start and end time
-    time_window = f"[{start_time}-{end_time}]"
+    if "aia" in ds_selected:
+        if wavelength == "":
+            wavelength_s = "[? WAVELNTH = " + input("Enter wavelength in Angstroms needed (e.g. 193: ") + " ?]"
+        else:
+            wavelength_s = "[? WAVELNTH = " + wavelength + " ?]"
+    else:
+        wavelength_s = ""
 
     # Lets create the export request shall we?
-    ds_needed = ds_selected + harpnum + time_window + segments_selected
-    print("\nDRMS request: ds_needed\n")
+    ds_needed = ds_selected + harpnum + time_window + wavelength_s + segments_selected
+    print(f"\nDRMS request: {ds_needed}\n")
     export_request = drms_client.export(ds_needed, method='url', protocol='fits')
 
     # Wait for the server to prepare requested files
@@ -91,11 +111,16 @@ def drms_download(start_time,end_time,instrument="hmi",type="sharp",data_series=
     elif "smarp" in ds_selected:
         download_dir = "/gehme/data/soho/mdi/smarps/" + start_time[0:10].replace(".","") + "/"
     elif "aia.lev1" in ds_selected:
-        download_dir = "/gehme/data/sdo/aia/L1/wavelength/" + start_time[0:10].replace(".","") + "/"
+        download_dir = "/gehme/data/sdo/aia/L1/" + wavelength + "/" + start_time[0:10].replace(".","") + "/"
     elif "hmi.M" in ds_selected:
         download_dir = "/gehme/data/sdo/hmi/" + start_time[0:10].replace(".", "") + "/"
     else:
         download_dir = input("Please manually enter the download directory\nRemember to use this convention! ---> /gehme/data/observatory/intrument/../data_type.../date/: \n")
+
+    try:
+        os.makedirs(download_dir)
+    except FileExistsError:
+        pass
 
     print(f"Data will be downloaded in {download_dir}")
     export_request.download(download_dir)
