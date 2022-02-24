@@ -3,7 +3,7 @@
 """
 module provides plotting support for fits data cubes
 
-@author: hoelken
+@author: iglesias
 """
 import cv2
 import numpy as np
