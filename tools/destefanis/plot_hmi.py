@@ -1,4 +1,4 @@
-def save_img(path,name)
+def save_img(path,name):
     import matplotlib.pyplot as plt
     import astropy.units as u
     import sunpy.data.sample
