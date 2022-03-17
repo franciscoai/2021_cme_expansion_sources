@@ -1,17 +1,18 @@
 from tkinter.messagebox import NO
 import os
+import matplotlib.pyplot as plt
+import astropy.units as u
+import sunpy.data.sample
+import sunpy.map
+from astropy.io import fits
+from astropy.coordinates import SkyCoord
 
 def save_img(ifile,opath,point=None):
     """
     
     :point: Optional point to plot in the image [x,y] in arcsecs. Default None
     """
-    import matplotlib.pyplot as plt
-    import astropy.units as u
-    import sunpy.data.sample
-    import sunpy.map
-    from astropy.io import fits
-    from astropy.coordinates import SkyCoord
+    
     hmi_map= sunpy.map.Map(ifile)
     hmi_map.plot_settings['cmap'] = "hmimag"
     hmi_map.plot_settings['norm'] = plt.Normalize(-1500, 1500)
