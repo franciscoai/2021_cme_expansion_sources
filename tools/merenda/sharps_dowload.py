@@ -5,7 +5,7 @@ import lu_tools as lt
 
 #Tomamos los datos del google sheet "Dates and Times CMEs" y los refinames manualmente para obtener
 #los datos pertinentes a los sharps.
-sharp_data = pd.read_csv("/home/lugem/GEHMe/lucho_repo/2021_cme_expansion_sources/sharp_download.csv")
+sharp_data = pd.read_csv("sharp_download.csv")
 
 #Parametros comunes para todas las descargas
 sharps_series = "hmi.sharp_cea_720s"
