@@ -6,6 +6,7 @@ import sunpy.data.sample
 import sunpy.map
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
+from astropy.wcs import WCS
 
 def save_img(ifile,opath,point=None, point_px=None):
     """
@@ -25,8 +26,8 @@ def save_img(ifile,opath,point=None, point_px=None):
         print(f'Map coordinate [{map_coord[0]}, {map_coord[1]}]')
         
     if point_px is not None:
-        point_coord = hmi_map.pixel_to_world(point_px)
-        print(point_coord)
+        point_coord = hmi_map.pixel_to_world(point_px[0]*u.pixel,point_px[1]*u.pixel)
+        print("The pixel coord are:", point_coord["lat"])
 
     plt.savefig(opath + "/" + os.path.basename(ifile) +".png")
     return
