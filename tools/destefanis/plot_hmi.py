@@ -7,7 +7,7 @@ import sunpy.map
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 
-def save_img(ifile,opath,point=None):
+def save_img(ifile,opath,point=None, point_px=None):
     """
     
     :point: Optional point to plot in the image [x,y] in arcsecs. Default None
@@ -23,6 +23,11 @@ def save_img(ifile,opath,point=None):
         map_coord = (point * u.arcsec)
         ax2.plot(map_coord[0].to('deg'), map_coord[1].to('deg'), 'o', color='white', transform=ax2.get_transform('world'))     
         print(f'Map coordinate [{map_coord[0]}, {map_coord[1]}]')
+        
+    if point_px is not None:
+        point_coord = hmi_map.pixel_to_world(point_px)
+        print(point_coord)
+
     plt.savefig(opath + "/" + os.path.basename(ifile) +".png")
     return
 
