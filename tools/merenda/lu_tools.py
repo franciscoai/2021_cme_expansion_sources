@@ -4,7 +4,7 @@ import os
 import drms
 
 #Random tools for working with solar physics data
-#Author: MerendaLucianoA.@GEHMe
+#Author: MerendaC.LucianoA.@GEHMe
 
 #read harpnums database
 harpnum_db = pd.read_csv("http://jsoc.stanford.edu/doc/data/hmi/harpnum_to_noaa/all_harps_with_noaa_ars.txt",sep=" ")
@@ -18,13 +18,14 @@ def noaa2harpnum(noaa):
     i = 0 # aux variable.
 
     while i < len(noaas) - 1:
-        if str(noaa) in noaas[i].split(sep=","):
+        if any([str(noaa_sub) in noaas[i].split(sep=",") for noaa_sub in noaa.split(sep=",")]):
             harpnuml.append(harps[i])
             harpnum_count += 1
         i += 1
 
     if harpnum_count > 1:
-        print("There's more than 1 harpnum available")
+        print("There's more than 1 harpnum available: ")
+        print(harpnuml)
         harpnum = input("Please enter manually which one you need: ")
     else:
         harpnum = str(harpnuml[0])
@@ -41,6 +42,7 @@ def drms_download(start_time,end_time="",time_span="",cadence="",instrument="hmi
     #   segments depends on the type of data
 
     #Check time window
+    
     if end_time == "":
         if time_span != "":
             time_window = f"[{start_time}/{time_span}]"
