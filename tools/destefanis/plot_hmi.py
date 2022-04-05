@@ -11,8 +11,30 @@ from sunpy.coordinates import frames
 
 def save_img(ifile,opath,point=None, point_px=None):
     """
+    Gerardo Jose Destefanis (g.destefanis@alumno.um.edu.ar), 2022.04.05
+
+    From a fits file generates a HMI map. Also, plots a map and saves the image by png file.
+    Lets, given a point in arcseconds, knows the correspondent pair of pixels in the image. 
+    Can realice the inverse operation, is say, given a point joined in pixels, knows it coordinates in arcseconds.
+
+    INPUTS:
+
+    ifile: path of the hmi fits file. 
+
+    opath: path where the image is saved. 
+
+    OPTIONAL INPUTS: 
+
+    point: Optional point to plot in the image [x,y] in arcsecs. Default None
+
+    point_px: Optional point of the image [x,y] in pixels. Default None 
+
+    OUTPUTS:
+
+    The plot of the image is save in path. 
     
-    :point: Optional point to plot in the image [x,y] in arcsecs. Default None
+    Coordinates of the points joined (in arcseconds and/or pixels). 
+
     """
     
     hmi_map= sunpy.map.Map(ifile)
