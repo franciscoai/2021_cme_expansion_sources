@@ -2,14 +2,92 @@ import pandas as pd
 import gspread as gs #use google apis to read cmes info from google spreadsheet
 import os
 import drms
+import sunpy.map
 
 #Random tools for working with solar physics data
 #Author: MerendaC.LucianoA.@GEHMe
 
-#read harpnums database
-harpnum_db = pd.read_csv("http://jsoc.stanford.edu/doc/data/hmi/harpnum_to_noaa/all_harps_with_noaa_ars.txt",sep=" ")
+#note to self
+#make an object that will have each property as an attribute or method(TBD)
+#To make csv properties we will use the same standard
+#ID/DateOfEvent, time, prop1_unit1, prop2_unit2, prop3_unit3, ...,  propn_unitn
+#then a loader will take the data from the csv a loa into the object.
+
+
+def sharp_parameter_csvgen(savedir):
+
+    # Files can be a string of the dir where the needed files are, can be used with regex
+    #So we take only one type of data segment since we only need the metadata, which is the same for all segments.
+    #Levantamos todos los directorios donde hayan sharps
+
+    print("Scanning sharps Dirs")
+    sharp_dir = "/gehme/data/sdo/hmi/sharps/"
+    dirs = os.listdir(sharp_dir)
+
+    ID = []
+    date = []
+    usflux = []
+    usflux_err = []
+    meanjzh = []
+    meanjzh_err = []
+    totusjh = []
+    totusjh_err = []
+    absnjzh = []
+    absnjzh_err = []
+    meanpot = []
+    meanpot_err = []
+    totpot = []
+    totpot_err = []
+
+    #Abrimos carpeta por carpeta y vamos agregando a la listas los datos de los headers de cada directorio
+    print("Starting to read files and headers.")
+    for dir in dirs:
+        #tomamos solo un tipo de archivo(data segments)
+        files = sharp_dir + dir + "/*Br.fits"
+
+        #read all the needed segments
+        sharps_data = sunpy.map.Map(files,sequence=True)
+
+        #take the metadata from the headers
+        headers = sharps_data.all_meta()
+        datetime = headers[0].get("T_REC")[0:10]
+
+        #Retrive event id.
+        id = date2id(datetime) #FUNCION A DEFINIR ----->>>> que nos tire el id en funcion de la fecha del evento
+        #sino preguntar a Fran como hacemos con el tema de los ids.
+        for hdr in headers:
+
+            ID.append(id)
+            date.append(hdr.get("T_REC"))
+            usflux.append(hdr.get("USFLUX"))
+            usflux_err.append(hdr.get("ERRVF"))
+            meanjzh.append(hdr.get("MEANJZH"))
+            meanjzh_err.append(hdr.get("ERRMIH"))
+            totusjh.append(hdr.get("TOTUSJH"))
+            totusjh_err.append(hdr.get("ERRTUI"))
+            absnjzh.append(hdr.get("ABSNJZH"))
+            absnjzh_err.append(hdr.get("ERRTAI"))
+            meanpot.append(hdr.get("MEANPOT"))
+            meanpot_err.append(hdr.get("ERRMPOT"))
+            totpot.append(hdr.get("TOTPOT"))
+            totpot_err.append(hdr.get("ERRTPOT"))
+
+
+
+    print("Saving all SHARPs data in " + savedir)
+    parameters = pd.DataFrame({"ID":ID,"T_REC":date,"USFLUX":usflux,"ERRVF":usflux_err,"MEANJZH":meanjzh,"ERRMIH":meanjzh_err,"TOTUSJH":totusjh,"ERRTUI":totusjh_err,"ABSNJZH":absnjzh,"ERRTAI":absnjzh_err,"MEANPOT":meanpot,"ERRMPOT":meanpot_err,"TOTPOT":totpot,"ERRTPOT":totpot_err})
+
+    #Save to csv file in savedir
+    parameters.to_csv(savedir + "sharps.csv")
+
+    return parameters
+
 
 def noaa2harpnum(noaa):
+
+    # read harpnums database
+    harpnum_db = pd.read_csv("http://jsoc.stanford.edu/doc/data/hmi/harpnum_to_noaa/all_harps_with_noaa_ars.txt",
+                             sep=" ")
     #check the database of noaa vs harpnum and returns the harpnum associated with a noaa AR number.
     noaas = list(harpnum_db["NOAA_ARS"])
     harps = list(harpnum_db["HARPNUM"])
