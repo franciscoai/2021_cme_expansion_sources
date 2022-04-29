@@ -1,30 +1,70 @@
 import pandas as pd
-import gspread as gs #use google apis to read cmes info from google spreadsheet
+import gspread as gs  # use google apis to read cmes info from google spreadsheet
 import os
 import drms
 import sunpy.map
+import numpy as np
+from astropy.time import Time
 
-#Random tools for working with solar physics data
-#Author: MerendaC.LucianoA.@GEHMe
+# Random tools for working with solar physics data
+# Author: MerendaC.LucianoA.@GEHMe
 
-#note to self
-#make an object that will have each property as an attribute or method(TBD)
-#To make csv properties we will use the same standard
-#ID/DateOfEvent, time, prop1_unit1, prop2_unit2, prop3_unit3, ...,  propn_unitn
-#then a loader will take the data from the csv a loa into the object.
+# note to self
+# make an object that will have each property as an attribute or method(TBD)
+# To make csv properties we will use the same standard
+# ID/DateOfEvent, time, prop1_unit1, prop2_unit2, prop3_unit3, ...,  propn_unitn
+# then a loader will take the data from the csv a loa into the object.
+
+
+def uglydateconv(uglydate):
+
+    # will convert just dd/MM/YYYY to YYYY-MM-dd  for now
+    dd = uglydate[0:2]
+    mm = uglydate[3:5]
+    yyyy = uglydate[6:]
+
+    nicedate = yyyy + "-" + mm + "-" + dd
+
+    return nicedate
+
+
+def date2id(datetime, ids_dir):
+
+    # ids_dir: path to Dates and Times excel downloaded file
+    # put datetime in the time format needed
+    datetime = datetime.replace(".", "-")
+
+    # get table from google sheets or download it to some dir to get it
+    # get all the sheets, select the columns we only need
+    # and clean them from nan values added automatically for blank cells
+
+    datesandtimes = pd.read_excel(ids_dir, sheet_name=None)
+    id_dates = pd.concat([datesandtimes[key][["ID", "Fecha"]] for key in datesandtimes.keys()])
+    id_dates = id_dates[id_dates["ID"].isna() != True]
+
+    ids = list(id_dates["ID"])
+    dates = list(id_dates["Fecha"])
+
+    # Get needed id for the csv file
+    id_required = [ids[n] for n, fecha in enumerate(dates) if Time(fecha) == Time(datetime)]
+
+    if len(id_required) > 1:
+        print(f"Ids found for {datetime}:\n {id_required}")
+        raise Exception("\n### 2 or more Ids were found")
+    else:
+        return id_required[0]
 
 
 def sharp_parameter_csvgen(savedir):
-
     # Files can be a string of the dir where the needed files are, can be used with regex
-    #So we take only one type of data segment since we only need the metadata, which is the same for all segments.
-    #Levantamos todos los directorios donde hayan sharps
+    # So we take only one type of data segment since we only need the metadata, which is the same for all segments.
+    # Levantamos todos los directorios donde hayan sharps
 
     print("Scanning sharps Dirs")
     sharp_dir = "/gehme/data/sdo/hmi/sharps/"
     dirs = os.listdir(sharp_dir)
 
-    ID = []
+    ids = []
     date = []
     usflux = []
     usflux_err = []
@@ -39,25 +79,27 @@ def sharp_parameter_csvgen(savedir):
     totpot = []
     totpot_err = []
 
-    #Abrimos carpeta por carpeta y vamos agregando a la listas los datos de los headers de cada directorio
+    # Abrimos carpeta por carpeta y vamos agregando a la listas los datos de los headers de cada directorio
     print("Starting to read files and headers.")
-    for dir in dirs:
-        #tomamos solo un tipo de archivo(data segments)
-        files = sharp_dir + dir + "/*Br.fits"
+    for directory in dirs:
 
-        #read all the needed segments
-        sharps_data = sunpy.map.Map(files,sequence=True)
+        # tomamos solo un tipo de archivo(data segments)
+        files = sharp_dir + directory + "/*Br.fits"
 
-        #take the metadata from the headers
+        # read all the needed segments
+        sharps_data = sunpy.map.Map(files, sequence=True)
+
+        # take the metadata from the headers
         headers = sharps_data.all_meta()
         datetime = headers[0].get("T_REC")[0:10]
 
-        #Retrive event id.
-        id = date2id(datetime) #FUNCION A DEFINIR ----->>>> que nos tire el id en funcion de la fecha del evento
-        #sino preguntar a Fran como hacemos con el tema de los ids.
-        for hdr in headers:
+        # Retrive event id or use the datetime for now.
+        id_req = date2id(datetime, ids_dir="/home/lugem/GEHMe/lucho_repo/Dates and Times CMEs.xlsx")
+        # FUNCION A DEFINIR ----->>>> que nos tire el id en funcion de la fecha del evento
+        # sino preguntar a Fran como hacemos con el tema de los ids.
 
-            ID.append(id)
+        for hdr in headers:
+            ids.append(id_req)
             date.append(hdr.get("T_REC"))
             usflux.append(hdr.get("USFLUX"))
             usflux_err.append(hdr.get("ERRVF"))
@@ -72,28 +114,28 @@ def sharp_parameter_csvgen(savedir):
             totpot.append(hdr.get("TOTPOT"))
             totpot_err.append(hdr.get("ERRTPOT"))
 
-
-
     print("Saving all SHARPs data in " + savedir)
-    parameters = pd.DataFrame({"ID":ID,"T_REC":date,"USFLUX":usflux,"ERRVF":usflux_err,"MEANJZH":meanjzh,"ERRMIH":meanjzh_err,"TOTUSJH":totusjh,"ERRTUI":totusjh_err,"ABSNJZH":absnjzh,"ERRTAI":absnjzh_err,"MEANPOT":meanpot,"ERRMPOT":meanpot_err,"TOTPOT":totpot,"ERRTPOT":totpot_err})
+    parameters = pd.DataFrame(
+        {"ID": ids, "T_REC": date, "USFLUX": usflux, "ERRVF": usflux_err, "MEANJZH": meanjzh, "ERRMIH": meanjzh_err,
+         "TOTUSJH": totusjh, "ERRTUI": totusjh_err, "ABSNJZH": absnjzh, "ERRTAI": absnjzh_err, "MEANPOT": meanpot,
+         "ERRMPOT": meanpot_err, "TOTPOT": totpot, "ERRTPOT": totpot_err})
 
-    #Save to csv file in savedir
-    parameters.to_csv(savedir + "sharps.csv")
+    # Save to csv file in savedir
+    parameters.to_csv(savedir + "sharps.csv", float_format="")
 
     return parameters
 
 
 def noaa2harpnum(noaa):
-
     # read harpnums database
     harpnum_db = pd.read_csv("http://jsoc.stanford.edu/doc/data/hmi/harpnum_to_noaa/all_harps_with_noaa_ars.txt",
                              sep=" ")
-    #check the database of noaa vs harpnum and returns the harpnum associated with a noaa AR number.
+    # check the database of noaa vs harpnum and returns the harpnum associated with a noaa AR number.
     noaas = list(harpnum_db["NOAA_ARS"])
     harps = list(harpnum_db["HARPNUM"])
     harpnum_count = 0
     harpnuml = []
-    i = 0 # aux variable.
+    i = 0  # aux variable.
 
     while i < len(noaas) - 1:
         if any([str(noaa_sub) in noaas[i].split(sep=",") for noaa_sub in noaa.split(sep=",")]):
@@ -110,8 +152,9 @@ def noaa2harpnum(noaa):
 
     return harpnum
 
-def drms_download(start_time,end_time="",time_span="",cadence="",instrument="hmi",data_series="",segments="",noaa="",wavelength="",user_email="lucianomerenda3@gmail.com"):
 
+def drms_download(start_time, end_time="", time_span="", cadence="", instrument="hmi", data_series="", segments="",
+                  noaa="", wavelength="", user_email="lucianomerenda3@gmail.com"):
     # vso type  client for downloading data from sdo and soho/mdi.
     # Parameters:
     #   "Time format for start_time and end_time is 2010.12.12_00:00:00_TAI"
@@ -119,8 +162,8 @@ def drms_download(start_time,end_time="",time_span="",cadence="",instrument="hmi
     #   type can be sharp, L1 depends on the instrument
     #   segments depends on the type of data
 
-    #Check time window
-    
+    # Check time window
+
     if end_time == "":
         if time_span != "":
             time_window = f"[{start_time}/{time_span}]"
@@ -135,10 +178,10 @@ def drms_download(start_time,end_time="",time_span="",cadence="",instrument="hmi
     # set the drms client
     drms_client = drms.Client(email=user_email, verbose=True)
 
-    #Select data series
+    # Select data series
     if data_series == "":
-        #print data series available of input instrument
-        available_series = drms_client.series(instrument.lower(),full=True)
+        # print data series available of input instrument
+        available_series = drms_client.series(instrument.lower(), full=True)
         print(f"Available data series for {instrument}:\n")
         for series in available_series.index:
             print(f"{series}) {available_series.name[series]} : {available_series.note[series]}")
@@ -147,22 +190,22 @@ def drms_download(start_time,end_time="",time_span="",cadence="",instrument="hmi
     else:
         ds_selected = data_series
 
-    #Select segments of the data needed
+    # Select segments of the data needed
     if segments == "":
         segments_available = drms_client.info(ds_selected).segments
-        for i,segment in enumerate(segments_available.index):
+        for i, segment in enumerate(segments_available.index):
             print(f"{i}) {segment}: {segments_available.note[segment]}")
 
         segments_selected = "{" + input("Enter segments name separated by a comma: ") + "}"
     else:
         segments_selected = "{" + segments + "}"
 
-    #Check if we need a harpnum for the data series selected
-    #ir if we need the wavelength for aia data
+    # Check if we need a harpnum for the data series selected
+    # ir if we need the wavelength for aia data
     if "HARPNUM" in drms_client.pkeys(ds_selected):
         if noaa == "":
             noaa_input = input("Enter NOAA number: ")
-            harpnum = "[" + noaa2harpnum(noaa_input) + "]" #only for sharps
+            harpnum = "[" + noaa2harpnum(noaa_input) + "]"  # only for sharps
         else:
             harpnum = "[" + noaa2harpnum(noaa) + "]"
     else:
@@ -187,15 +230,17 @@ def drms_download(start_time,end_time="",time_span="",cadence="",instrument="hmi
     # Then download files
     # Set the download directory first
     if "sharp" in ds_selected:
-        download_dir = "/gehme/data/sdo/hmi/sharps/" + start_time[0:10].replace(".","") + "/"
+        download_dir = "/gehme/data/sdo/hmi/sharps/" + start_time[0:10].replace(".", "") + "/"
     elif "smarp" in ds_selected:
-        download_dir = "/gehme/data/soho/mdi/smarps/" + start_time[0:10].replace(".","") + "/"
+        download_dir = "/gehme/data/soho/mdi/smarps/" + start_time[0:10].replace(".", "") + "/"
     elif "aia.lev1" in ds_selected:
-        download_dir = "/gehme/data/sdo/aia/L1/" + wavelength + "/" + start_time[0:10].replace(".","") + "/"
+        download_dir = "/gehme/data/sdo/aia/L1/" + wavelength + "/" + start_time[0:10].replace(".", "") + "/"
     elif "hmi.M" in ds_selected:
         download_dir = "/gehme/data/sdo/hmi/" + start_time[0:10].replace(".", "") + "/"
     else:
-        download_dir = input("Please manually enter the download directory\nRemember to use this convention! ---> /gehme/data/observatory/intrument/../data_type.../date/: \n")
+        download_dir = input(
+            "Please manually enter the download directory\nRemember to use this convention: "
+            "---> /gehme/data/observatory/intrument/../data_type.../date/: \n")
 
     try:
         os.makedirs(download_dir)
@@ -206,21 +251,20 @@ def drms_download(start_time,end_time="",time_span="",cadence="",instrument="hmi
     export_request.download(download_dir)
 
 
-
-def google_to_csv(gtitle,fname):
-    #Import data from google spreadsheets and save in a csv file
-    #NOTE: before using, read gspread documentation on how to set up the google cloud app
+def google_to_csv(gtitle, fname):
+    # Import data from google spreadsheets and save in a csv file
+    # NOTE: before using, read gspread documentation on how to set up the google cloud app
     #      in order to finally be able to use it with your google account
-    #IMPORTANT: Can't be used from within the server as far a I understand,
+    # IMPORTANT: Can't be used from within the server as far a I understand,
     #           since autentication needs a browser GUI running in the server
 
-    #using the gspread library
+    # using the gspread library
     savepath = os.getcwd() + "/" + fname
-    #Start google client by auth Remember to put json auth file in /.config/gspread
+    # Start google client by auth Remember to put json auth file in /.config/gspread
     google_client = gs.oauth()
 
     spreadsheet = google_client.open(gtitle)
-    worksheet = spreadsheet.sheet1 #If we only have 1 sheet, need to improve this
+    worksheet = spreadsheet.sheet1  # If we only have 1 sheet, need to improve this
     dataframe = pd.DataFrame(worksheet.get_all_values())
 
     dataframe.to_csv(savepath, sep=",")
