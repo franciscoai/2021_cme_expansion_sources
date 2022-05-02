@@ -2,6 +2,7 @@ import sunpy.map
 import os
 import lu_tools as lt
 import pandas as pd
+import numpy as np
 
 # Levantamos todos los directorios donde hayan sharps
 # y chequeamos que el directorio al repo git este bien.
@@ -54,7 +55,7 @@ for directory in dirs:
     id_req = lt.date2id(datetime, ids_dir="/home/lugem/GEHMe/lucho_repo/Dates and Times CMEs.xlsx")
 
     for hdr in headers:
-        ids.append(id_req)
+        ids.append(int(id_req))
         date.append(hdr.get("T_REC"))
         usflux.append(hdr.get("USFLUX"))
         usflux_err.append(hdr.get("ERRVF"))
@@ -75,11 +76,18 @@ parameters = pd.DataFrame(
      "TOTUSJH": totusjh, "ERRTUI": totusjh_err, "ABSNJZH": absnjzh, "ERRTAI": absnjzh_err, "MEANPOT": meanpot,
      "ERRMPOT": meanpot_err, "TOTPOT": totpot, "ERRTPOT": totpot_err})
 
+
+# Rename the columns so the units are next to the parameter
+parameters = parameters.rename(columns={"USFLUX":"USFLUX.Mx", "ERRVF":"ERRVF.Mx", "MEANJZH":"MEANJZH.\\frac{G^{2}}{m}",
+                           "ERRMIH":"ERRMIH.\\frac{G^{2}}{m}", "TOTUSJH":"TOTUSJH.\\frac{G^{2}}{m}",
+                           "ERRTUI":"ERRTUI.\\frac{G^{2}}{m}", "ABSNJZH":"ABSNJZH.\\frac{G^{2}}{m}",
+                           "ERRTAI":"ERRTAI.\\frac{G^{2}}{m}", "MEANPOT":"MEANPOT.\\frac{erg}{cm^{3}}",
+                           "ERRMPOT":"ERRMPOT.\\frac{erg}{cm^{3}}", "TOTPOT":"TOTPOT.\\frac{erg}{cm}",
+                           "ERRTPOT":"ERRTPOT.\\frac{erg}{cm}"})
+
 # Data preview
 print("Data preview: \n")
-#print(parameters.head())
+print(parameters.head())
 
 # Save to csv file in savedir
-parameters.to_csv(savedir + "sharps.csv", columns=["ID", "T_REC", "USFLUX", "ERRVF", "MEANJZH", "ERRMIH",
-                                                   "TOTUSJH", "ERRTUI", "ABSNJZH", "ERRTAI", "MEANPOT", "ERRMPOT",
-                                                   "TOTPOT", "ERRTPOT"], sep=",", float_format="%4.3e")
+parameters.to_csv(savedir + "sharps.csv", sep=",", float_format="%04.3e", index=False)
