@@ -2,7 +2,6 @@ import sunpy.map
 import os
 import lu_tools as lt
 import pandas as pd
-import numpy as np
 
 # Levantamos todos los directorios donde hayan sharps
 # y chequeamos que el directorio al repo git este bien.
@@ -78,14 +77,16 @@ parameters = pd.DataFrame(
 
 
 # Rename the columns so the units are next to the parameter
-parameters = parameters.rename(columns={"USFLUX":"USFLUX.Mx", "ERRVF":"ERRVF.Mx", "MEANJZH":"MEANJZH.\\frac{G^{2}}{m}",
-                           "ERRMIH":"ERRMIH.\\frac{G^{2}}{m}", "TOTUSJH":"TOTUSJH.\\frac{G^{2}}{m}",
-                           "ERRTUI":"ERRTUI.\\frac{G^{2}}{m}", "ABSNJZH":"ABSNJZH.\\frac{G^{2}}{m}",
-                           "ERRTAI":"ERRTAI.\\frac{G^{2}}{m}", "MEANPOT":"MEANPOT.\\frac{erg}{cm^{3}}",
-                           "ERRMPOT":"ERRMPOT.\\frac{erg}{cm^{3}}", "TOTPOT":"TOTPOT.\\frac{erg}{cm}",
-                           "ERRTPOT":"ERRTPOT.\\frac{erg}{cm}"})
+parameters = parameters.rename(columns={"USFLUX": "USFLUX.Mx", "ERRVF": "ERRVF.Mx",
+                                        "MEANJZH": "MEANJZH.\\frac{G^{2}}{m}",
+                                        "ERRMIH": "ERRMIH.\\frac{G^{2}}{m}", "TOTUSJH": "TOTUSJH.\\frac{G^{2}}{m}",
+                                        "ERRTUI": "ERRTUI.\\frac{G^{2}}{m}", "ABSNJZH": "ABSNJZH.\\frac{G^{2}}{m}",
+                                        "ERRTAI": "ERRTAI.\\frac{G^{2}}{m}", "MEANPOT": "MEANPOT.\\frac{erg}{cm^{3}}",
+                                        "ERRMPOT": "ERRMPOT.\\frac{erg}{cm^{3}}", "TOTPOT": "TOTPOT.\\frac{erg}{cm}",
+                                        "ERRTPOT": "ERRTPOT.\\frac{erg}{cm}"})
 
 # Data preview
+
 print("Data preview: \n")
 print(parameters.head())
 
