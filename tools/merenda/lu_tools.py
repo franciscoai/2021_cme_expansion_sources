@@ -5,6 +5,10 @@ import drms
 import sunpy.map
 import numpy as np
 from astropy.time import Time
+from matplotlib.patches import Rectangle
+from matplotlib.backend_bases import MouseButton
+from matplotlib.backend_bases import MouseEvent
+import ipdb
 
 # Random tools for working with solar physics data
 # Author: MerendaC.LucianoA.@GEHMe
@@ -14,6 +18,185 @@ from astropy.time import Time
 # To make csv properties we will use the same standard
 # ID/DateOfEvent, time, prop1_unit1, prop2_unit2, prop3_unit3, ...,  propn_unitn
 # then a loader will take the data from the csv a loa into the object.
+
+
+class AreaSelector:
+
+    #
+
+    def __init__(self, figure, axes):
+        # Initialize the instances
+        self.canvas_coords = []
+        self.data_coords =[]
+        self.bottom_left = 0.0
+        self.width = 0.0
+        self.height = 0.0
+        #We connect the figure to event handlers
+        self.axs = axes
+        self.fig = figure
+        self.press_event = figure.canvas.mpl_connect('button_press_event', self.press)
+        self.rel_event = figure.canvas.mpl_connect('button_release_event', self.release)
+        self.move_event = figure.canvas.mpl_connect('motion_notify_event', self.move)
+
+    def press(self, event):
+        # Register first point of the selected area
+        if event.button is MouseButton.LEFT:
+            if len(self.canvas_coords) < 1 and len(self.data_coords) < 1:
+                self.canvas_coords.append((event.x, event.y))
+                self.data_coords.append((event.xdata, event.ydata))
+                print(event.x, event.y, event.xdata, event.ydata)
+            else:
+                # Clear all items in order to start a new rectangle
+
+                self.canvas_coords = []
+                self.data_coords = []
+                self.canvas_coords.append((event.x, event.y))
+                self.data_coords.append((event.xdata, event.ydata))
+                print(event.x, event.y, event.xdata, event.ydata)
+
+    def move(self,event):
+
+        # Draw the rectangle as the mouse moves over the image
+        if event.button is MouseButton.LEFT:
+            if len(self.axs.patches) < 1:
+                bottom_left, width, height = cornerl_order(
+                   [self.data_coords[0], (event.xdata, event.ydata)], "blwh", "mpl")
+                area_to_select = Rectangle(bottom_left, width=width,
+                                           height=height, linewidth=1.0, alpha=0.2, facecolor=None,edgecolor='black')
+                self.axs.add_patch(area_to_select)
+                self.fig.canvas.draw()
+
+            else:
+                self.axs.patches.pop()
+                self.fig.canvas.draw()
+                bottom_left, width, height = cornerl_order(
+                    [self.data_coords[0], (event.xdata, event.ydata)], "blwh", "mpl")
+                area_to_select = Rectangle(bottom_left, width=width,
+                                           height=height, linewidth=1.0, alpha=0.2,
+                                           facecolor=None, edgecolor='black')
+                self.axs.add_patch(area_to_select)
+                self.fig.canvas.draw()
+
+
+    def release(self, event):
+        # Register second point and draw final rectangle.
+        if event.button is MouseButton.LEFT:
+            self.canvas_coords.append((event.x, event.y))
+            self.data_coords.append((event.xdata, event.ydata))
+
+        self.bottom_left, self.width, self.height = cornerl_order(
+            self.data_coords, "blwh", "mpl")
+        print(self.data_coords,self.width,self.height)
+        area_selected = Rectangle(self.bottom_left, width=self.width,
+                                      height=self.height, linewidth=1.0, alpha=0.2, facecolor=None,edgecolor='black')
+        self.axs.add_patch(area_selected)
+        self.fig.canvas.draw()
+        print(event.x, event.y,event.xdata,event.ydata)
+        print(self.canvas_coords,self.data_coords)
+
+
+def cornerl_order(coords,order,library):
+
+    # takes a list of two tuples that contains the pixel coords of a rectangle and
+    # returns the same list in the following order[top_left_tuple, bottom_right_tuple]
+    # according to numpy indexing order or matplotlib too
+    # coords = [(x1,y1),(x2,y2)]
+    # order can be: "tpbr":  TopLeft - BottomRight order to use with opencv's rectangle
+    #               "bltr": BottomLeft - TopRight order use it with sunpy.map.submap
+    #               "blwh": BottomLeft width height order to use with matplotlib patches
+    # library: "np" for numpy and opencv
+    #          "mpl" for matplotlib
+
+    x1, y1 = coords[0]
+    x2, y2 = coords[1]
+
+    if (not x1) or (not y1) or (not x2) or (not y2):
+        raise ValueError("Outside of Data")
+
+    if library == 'np':
+        if x2 > x1 and y2 < y1:
+            top_left = (x1, y2)
+            bottom_right = (x2, y1)
+            top_right = (x2, y2)
+            bottom_left = (x1, y1)
+        elif x2 > x1 and y2 > y1:
+            top_left = (x1, y1)
+            bottom_right = (x1, y2)
+            top_right = (x2, y1)
+            bottom_left = (x1, y2)
+        elif x1 > x2 and y1 > y2:
+            top_left = (x2, y2)
+            bottom_right = (x1, y1)
+            top_right = (x1, y2)
+            bottom_left = (x2, y1)
+        elif x1 > x2 and y1 < y2:
+            top_left = (x2, y1)
+            bottom_right = (x1, y2)
+            top_right = (x1, y1)
+            bottom_left = (x2, y2)
+        else:
+            print("This isn't a rectangle!")
+            if x1 == x2 and (y1 > y2 or y2 > y1):
+                top_left = (x2, y1)
+                bottom_right = (x2, y2)
+                top_right = (x2, y1)
+                bottom_left = (x2, y2)
+            elif y1 == y2 and (x1 > x2 or x2 > x1):
+                top_left = (x1, y2)
+                bottom_right = (x2, y2)
+                top_right = (x1, y2)
+                bottom_left = (x2, y2)
+
+
+    elif library == 'mpl':
+        if x2 > x1 and y2 > y1:
+            top_left = (x1, y2)
+            bottom_right = (x2, y1)
+            top_right = (x2, y2)
+            bottom_left = (x1, y1)
+        elif x2 > x1 and y2 < y1:
+            top_left = (x1, y1)
+            bottom_right = (x2, y2)
+            top_right = (x2, y1)
+            bottom_left = (x1, y2)
+        elif x1 > x2 and y1 > y2:
+            top_left = (x2, y1)
+            bottom_right = (x1, y2)
+            top_right = (x1, y1)
+            bottom_left = (x2, y2)
+        elif x1 > x2 and y1 < y2:
+            top_left = (x2, y2)
+            bottom_right = (x1, y1)
+            top_right = (x1, y2)
+            bottom_left = (x2, y1)
+        else:
+            print("This isn't a rectangle!")
+            if x1 == x2 and (y1 > y2 or y2 > y1):
+                top_left = (x2, y1)
+                bottom_right = (x2, y2)
+                top_right = (x2, y1)
+                bottom_left = (x2, y2)
+            elif y1 == y2 and (x1 > x2 or x2 > x1):
+                top_left = (x1, y2)
+                bottom_right = (x2, y2)
+                top_right = (x1, y2)
+                bottom_left = (x2, y2)
+    else:
+        raise ValueError("Wrong library input")
+
+    if order == "tpbr":
+        # This is for opencv's function cv2.rectangle
+        return [top_left, bottom_right]
+    elif order == "bltp":
+        # This is for sunpy.map.submap's method
+        return [bottom_left, top_right]
+    elif order == "blwh":
+        # this is for matplolib's Rectangle patch
+        width = bottom_right[0] - bottom_left[0]
+        height = top_left[1] - bottom_left[1]
+        return (bottom_left,width,height)
+    else:
+        raise ValueError("Wrong order input")
 
 
 def uglydateconv(uglydate):

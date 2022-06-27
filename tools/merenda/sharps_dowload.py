@@ -9,7 +9,7 @@ sharp_data = pd.read_csv("sharp_download.csv")
 
 # Parametros comunes para todas las descargas
 sharps_series = "hmi.sharp_cea_720s"
-sharp_segments = "Br,Br_err,Bp,Bp_err,Bt,Bt_err,bitmap,conf_disambig"
+sharp_segments = "magnetogram" #Br,Br_err,Bp,Bp_err,Bt,Bt_err,bitmap,conf_disambig,
 
 for row in sharp_data.index:
 
