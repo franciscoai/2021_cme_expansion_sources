@@ -21,5 +21,5 @@ for time, data in zip(hebe_filament_times, hebe_filaments_data):
     hdr = magmap.meta
     input_data = magmap.data
     pil_computation = pp.PILOOP(input_data)
-    print(f"Filament activation time: {time}", f"Header T_REC: {hdr['T_REC']}", f"theta0 = {pil_computation['theta0']*np.pi/180.}")
+    print(f"Filament activation time: {time},", f"Header T_REC: {hdr['T_REC'],}", f"theta0 = {pil_computation['theta0']}")
 
