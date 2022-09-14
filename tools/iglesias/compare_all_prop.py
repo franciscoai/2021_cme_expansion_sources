@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Computes filament length [km] and tilt angle [deg] from two points measured manually.
-Writes a new tale including those data
+Compares the properties of various fenomena associated to a CME:
+- Magnetic AR morphological and magnetic properties
+- Ca filament morphological properties
+- White light CME 3D morphological properties from GCS forward modeling
 
 @author: iglesias
 """
@@ -23,8 +25,7 @@ from sunpy.coordinates import frames
 local_path = os.getcwd()
 repo_path = os.path.dirname(os.path.dirname(local_path))
 file_path = repo_path + '/input_data/filament_coords.csv'
-ofile = repo_path + '/output_data/filaments.csv'
-oimage = repo_path + '/output_data/filaments.png'
+
 
 ##########
 
@@ -53,8 +54,6 @@ for i in range(len(p0)):
     b.append(GreatArc(p0[i], p2[i], points=3))
     c.append(GreatArc(p0[i], p1[i], points=3))
 df['lenght'] = np.array([float(i.distances()[2].value) for i in c]).flatten()
-df['lon_middle'] = np.array([float(i.coordinates()[1].lon.value) for i in c]).flatten()
-df['lat_middle'] = np.array([float(i.coordinates()[1].lat.value) for i in c]).flatten()
 print('******Filament lenght [km]:', df['lenght'])
 
 # filament (c) tilt angles
@@ -90,9 +89,11 @@ for i in range(len(c)):
     plt.scatter([df['lon2'][i]], [df['lat2'][i]], color='k')
     plt.scatter([ df['lon2'][i]], [df['lat1'][i]], color='c')  
     plt.gca().set_aspect('equal')
-plt.tight_layout()
-plt.savefig(oimage)
+plt.show()
 
-df.to_csv(ofile)
-print('Ouput saved to file...'+ofile)
-print('Done :-D')
+# m = sunpy.map.Map(AIA_171_IMAGE)
+# ax = plt.subplot(projection=m)
+# m.plot(axes=ax)
+# for i in range(len(c)):
+#     ax.plot_coord(c[i].coordinates().transform_to(frames.Helioprojective), color='r')
+# plt.show()
