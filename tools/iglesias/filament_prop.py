@@ -14,11 +14,11 @@ import os
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from sunpy.coordinates.utils import GreatArc
-import sunpy.map
-from sunpy.data.sample import AIA_171_IMAGE
+#import sunpy.map
+#from sunpy.data.sample import AIA_171_IMAGE
 import pandas as pd
 import datetime as dt
-from sunpy.coordinates import frames
+#from sunpy.coordinates import frames
 
 local_path = os.getcwd()
 repo_path = os.path.dirname(os.path.dirname(local_path))
@@ -60,10 +60,10 @@ print('******Filament lenght [km]:', df['lenght'])
 # filament (c) tilt angles
 tilt = []
 for i in range(len(c)):
-    #angular sides
-    a_ang = float(a[i].inner_angles()[2].value)  
-    b_ang = float(b[i].inner_angles()[2].value)  
-    c_ang = float(c[i].inner_angles()[2].value) 
+    # angular sides
+    a_ang = float(a[i].inner_angles()[2].value)
+    b_ang = float(b[i].inner_angles()[2].value)
+    c_ang = float(c[i].inner_angles()[2].value)
     ctilt = np.rad2deg(np.arccos((np.cos(a_ang) - np.cos(b_ang) * np.cos(c_ang)) / (np.sin(b_ang) * np.sin(c_ang))))
     if df['lat2'][i] > df['lat1'][i]:
         tilt.append(ctilt)
@@ -76,7 +76,7 @@ print('******Tilt Angles:', df['tilt_angle'])
 # plots
 a = []
 b = []
-c = [] 
+c = []
 for i in range(len(p0)):
     a.append(GreatArc(p1[i], p2[i], points=20))
     b.append(GreatArc(p0[i], p2[i], points=20))
@@ -88,11 +88,11 @@ for i in range(len(c)):
     plt.scatter(c[i].coordinates().lon, c[i].coordinates().lat, color='b', s=2)
     plt.scatter([df['lon1'][i]], [df['lat1'][i]], color='y')
     plt.scatter([df['lon2'][i]], [df['lat2'][i]], color='k')
-    plt.scatter([ df['lon2'][i]], [df['lat1'][i]], color='c')  
+    plt.scatter([df['lon2'][i]], [df['lat1'][i]], color='c')
     plt.gca().set_aspect('equal')
 plt.tight_layout()
 plt.savefig(oimage)
 
-df.to_csv(ofile)
+df.to_csv(ofile, index=False)
 print('Ouput saved to file...'+ofile)
 print('Done :-D')
