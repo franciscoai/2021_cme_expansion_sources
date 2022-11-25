@@ -356,7 +356,7 @@ def drms_download(start_time, end_time="", time_span="", cadence="", instrument=
     # Then download files
     # Set the download directory first
     if "sharp" in ds_selected:
-        download_dir = "/gehme/data/sdo/hmi/SHARPs/" + start_time[0:10].replace(".", "") + "/"
+        download_dir = "/gehme/data/sdo/hmi/sharps/" + start_time[0:10].replace(".", "") + "/"
     elif "smarp" in ds_selected:
         download_dir = "/gehme/data/soho/mdi/smarps/" + start_time[0:10].replace(".", "") + "/"
     elif "aia.lev1" in ds_selected:
