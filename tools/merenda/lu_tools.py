@@ -22,8 +22,9 @@ import ipdb
 
 class AreaSelector:
 
-    #
-
+    """
+        Class to select an area from an image in matplotlib.
+    """
     def __init__(self, figure, axes):
         # Initialize the instances
         self.canvas_coords = []
@@ -95,17 +96,20 @@ class AreaSelector:
         print(self.canvas_coords,self.data_coords)
 
 
-def cornerl_order(coords,order,library):
+def cornerl_order(coords, order, library):
 
-    # takes a list of two tuples that contains the pixel coords of a rectangle and
-    # returns the same list in the following order[top_left_tuple, bottom_right_tuple]
-    # according to numpy indexing order or matplotlib too
-    # coords = [(x1,y1),(x2,y2)]
-    # order can be: "tpbr":  TopLeft - BottomRight order to use with opencv's rectangle
-    #               "bltr": BottomLeft - TopRight order use it with sunpy.map.submap
-    #               "blwh": BottomLeft width height order to use with matplotlib patches
-    # library: "np" for numpy and opencv
-    #          "mpl" for matplotlib
+    """ Takes a list of two tuples that contains the pixel coords of a rectangle and
+        returns the same list in the following order[top_left_tuple, bottom_right_tuple]
+        according to numpy indexing order or matplotlib too
+        input:
+                coords = [(x1,y1),(x2,y2)]
+                order can be: "tpbr":  TopLeft - BottomRight order to use with opencv's rectangle
+                              "bltr": BottomLeft - TopRight order use it with sunpy.map.submap
+                              "blwh": BottomLeft width height order to use with matplotlib patches
+                library: "np" for numpy and opencv
+                         "mpl" for matplotlib
+        output: coords in desired format/order
+    """
 
     x1, y1 = coords[0]
     x2, y2 = coords[1]
@@ -201,7 +205,9 @@ def cornerl_order(coords,order,library):
 
 def uglydateconv(uglydate):
 
-    # will convert just dd/MM/YYYY to YYYY-MM-dd  for now
+    """
+        Will convert just dd/MM/YYYY to YYYY-MM-dd  for now
+    """
     dd = uglydate[0:2]
     mm = uglydate[3:5]
     yyyy = uglydate[6:]
@@ -239,6 +245,14 @@ def date2id(datetime, ids_dir):
 
 
 def noaa2harpnum(noaa):
+
+    """
+        Returns the harpnum associated with a given noaa Active region number
+            input:
+                noaa: NOAA active region number
+            output:
+                harpnum associated.
+    """
     # read harpnums database
     harpnum_db = pd.read_csv("http://jsoc.stanford.edu/doc/data/hmi/harpnum_to_noaa/all_harps_with_noaa_ars.txt",
                              sep=" ")
@@ -267,13 +281,13 @@ def noaa2harpnum(noaa):
 
 def drms_download(start_time, end_time="", time_span="", cadence="", instrument="hmi", data_series="", segments="",
                   noaa="", wavelength="", user_email="lucianomerenda3@gmail.com"):
-    # vso type  client for downloading data from sdo and soho/mdi.
-    # Parameters:
-    #   "Time format for start_time and end_time is 2010.12.12_00:00:00_TAI"
-    #   instrument can mdi, hmi, aia,
-    #   type can be sharp, L1 depends on the instrument
-    #   segments depends on the type of data
-
+    """ vso type  client for downloading data from sdo and soho/mdi.
+     Parameters:
+       "Time format for start_time and end_time is 2010.12.12_00:00:00_TAI"
+       instrument can mdi, hmi, aia,
+       type can be sharp, L1 depends on the instrument
+       segments depends on the type of data
+    """
     # Check time window
 
     if end_time == "":
@@ -317,7 +331,7 @@ def drms_download(start_time, end_time="", time_span="", cadence="", instrument=
     if "HARPNUM" in drms_client.pkeys(ds_selected):
         if noaa == "":
             noaa_input = input("Enter NOAA number: ")
-            harpnum = "[" + noaa2harpnum(noaa_input) + "]"  # only for sharps
+            harpnum = "[" + noaa2harpnum(noaa_input) + "]"  # only for SHARPs
         else:
             harpnum = "[" + noaa2harpnum(noaa) + "]"
     else:
@@ -342,7 +356,7 @@ def drms_download(start_time, end_time="", time_span="", cadence="", instrument=
     # Then download files
     # Set the download directory first
     if "sharp" in ds_selected:
-        download_dir = "/gehme/data/sdo/hmi/sharps/" + start_time[0:10].replace(".", "") + "/"
+        download_dir = "/gehme/data/sdo/hmi/SHARPs/" + start_time[0:10].replace(".", "") + "/"
     elif "smarp" in ds_selected:
         download_dir = "/gehme/data/soho/mdi/smarps/" + start_time[0:10].replace(".", "") + "/"
     elif "aia.lev1" in ds_selected:
@@ -364,11 +378,13 @@ def drms_download(start_time, end_time="", time_span="", cadence="", instrument=
 
 
 def google_to_csv(gtitle, fname):
-    # Import data from google spreadsheets and save in a csv file
-    # NOTE: before using, read gspread documentation on how to set up the google cloud app
-    #      in order to finally be able to use it with your google account
-    # IMPORTANT: Can't be used from within the server as far a I understand,
-    #           since autentication needs a browser GUI running in the server
+
+    """ Import data from google spreadsheets and save in a csv file
+            # NOTE: before using, read gspread documentation on how to set up the google
+                cloud app in order to finally be able to use it with your google account
+            # IMPORTANT: Can't be used from within the server as far as I understand,
+            #           since authentication needs a browser GUI running in the server
+    """
 
     # using the gspread library
     savepath = os.getcwd() + "/" + fname
