@@ -1,0 +1,53 @@
+Information: 
+The mass of the 12 events analized in Cremades et al. 2018, is calculated for the instruments: COR1 A/B ; COR2 A/B ; LASCO C2
+The required data are processed to level 1.0 and must be in units of MSB (mean solar brightness) to compute the mass  
+The fit to the CMEs border in the images is performed using the routine scc_CME_MASSIMG2TOTAL.pro with the keyword /SECTOR
+The CMEs border were delimited using as reference the GCS reconstructions done by Hebe (except for 20121214 event, where I could not see any other CME so not sure why not all the CME was fitted by GCS). 
+Mass is calculated assuming propagation along the coordinates of the main axis of the GCS model (coordinates of the propagation taken from Cremades et al. 2018)
+
+The difference between ROI and SECTOR opctions is lower than 10% (Mass_ROI < Mass_SECTOR)
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+The time of the preevent images considered for mass calculation are the following: 
+		  LASCO/C2   	COR1B	COR1A	COR2B	COR2A		
+20101212:	  04:33	02:35	02:25	01:54	01:54	
+20101214:	  15:24	15:00	15:00	15:39	15:24 
+20110317:	  12:10	10:35	10:35	11:54	11:54
+20110605:	  03:28         02:10	02:10	04:39	04:39
+20130123: 	  13:58	12:55	13:15	14:24	13:54
+20130129: 	  01:59	01:35	01:35	01:54	01:54
+20130209: 	  06:35	05:45	05:40	06:24	06:24 
+20130424: 	  05:59	05:30	05:15	06:54	05:54
+20130502: 	  04:10	05:00	04:50	05:39	01:24
+20130517: 	  20:36	19:45	19:45	20:54	20:24
+20130527: 	  18:58	18:30	18:30   20:24	19:24
+20130607: 	  22:35	22:30	22:15	22:54	22:54
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+important notes: 
+Event 20101214: GCS does not include some small part of the CME in the fitting. I have included all the CME emission in the calculation of the mass.
+Event 20130209: after 06:45 appears in COR1B an important filamentary material around PA~270, not being part of the CME of interest
+Event 20130424: High mass values in COR1-A, given by the core of the CME. It is probable, that this massive core be made of H-alpha chromospheric material. After some time, the hidrogen is being ionized so 			the mass decrease when the CME propagates. In that case, Thomson scattering is not responsable for the brightness and mass values are incorrect (see paper by Mierla et al. 2009) 
+Event 20130502: There are parts of the CME (CMEs?) not included in the GCS, I have included all the CME emission in the calculation of the mass. 
+Event 20130517: From the images it appears that the CME propagates close to the POS of ST-A and ST-B. Does not corresponds with the propagation angle found for ST-A (mass values of ST-A are not reliable) 
+Event 20130527: Very high values of mass in COR1-A due to a dense core of the CME. Mass decreases in altitude, probably due to H-alpha material in the core. No data in COR1-B since 20 UT
+Event 20130607: Seems to be a deflection of ~10 deg in the PA limits of COR2 respect to COR1
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+Defition of the Sector for the instruments (PA values correspond to the final values used, when the CME is fully developed): 
+[Initial Height; final value of PA0; Final value of PA1] 	
+20101212: COR1-A = [1.60,020,060]; COR1-B = [1.40,298,340]; COR2-A = [2.30,025,067]; COR2-B = [2.80,293,335]; C2 =[1.95,007,040]
+20101214: COR1-A = [1.60,355,077]; COR1-B = [1.40,280,355]; COR2-A = [2.30,345,080]; COR2-B = [2.80,278,005]; C2 =[1.95,273,010]
+20110317: COR1-A = [1.60,213,276]; COR1-B = [1.40,082,148]; COR2-A = [2.30,210,282]; COR2-B = [2.80,***,***]; C2 =[1.95,077,225]
+20110605: COR1-A = [1.60,010,082]; COR1-B = [1.40,275,345]; COR2-A = [2.30,350,110]; COR2-B = [2.80,270,005]; C2 =[1.95,012,068]
+20130123: COR1-A = [1.60,350,075]; COR1-B = [1.40,282,340]; COR2-A = [2.30,350,075]; COR2-B = [2.80,280,358]; C2 =[1.95,332,060]
+20130129: COR1-A = [1.60,355,048]; COR1-B = [1.40,312,010]; COR2-A = [2.30,358,053]; COR2-B = [2.80,324,014]; C2 =[1.90,327,018] 
+20130209: COR1-A = [1.55,027,090]; COR1-B = [1.40,280,345]; COR2-A = [2.30,027,093]; COR2-B = [2.80,270,344]; C2 =[1.90,305,015]
+20130424: COR1-A = [1.40,204,245]; COR1-B = [1.60,148,202]; COR2-A = [2.30,197,242]; COR2-B = [2.80,145,205]; C2 =[2.00,133,178]
+20130502: COR1-A = [1.60,020,090]; COR1-B = [1.35,287,354]; COR2-A = [2.30,013,100]; COR2-B = [2.80,287,354]; C2 =[1.95,310,015]
+20130517: COR1-A = [1.40,178,232]; COR1-B = [1.40,114,170]; COR2-A = [2.30,163,213]; COR2-B = [2.80,116,170]; C2 =[1.95,169,232]
+20130527: COR1-A = [1.40,198,246]; COR1-B = [1.40,145,228]; COR2-A = [2.30,194,244]; COR2-B = [2.80,136,225]; C2 =[1.95,129,184]
+20130607: COR1-A = [1.40,115,182]; COR1-B = [1.40,127,184]; COR2-A = [2.30,118,194]; COR2-B = [2.80,138,198]; C2 =[1.95,184,244]
+
+
+Written by Fernando M. López -  GHEMe - October 2022
+Last Modification, March 2023
+
