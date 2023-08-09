@@ -1,0 +1,136 @@
+Procedure reduce_level_1.pro,vreduce_level_1.pro	1.67, 02/01/16 started at 2018/10/05 15:58:22.638
+Input = /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_05/110214/c2/2011-02-14T17_36_06_22361932.fts
+22361932.fts 2011/02/14t17:36:06.064 Orange Clear
+Procedure c2_calibrate started at 2018/10/05 15:58:22.662
+Procedure c2_calibrate completed at 2018/10/05 16:02:30.041
+Procedure c2_warp started at 2018/10/05 16:02:30.041
+Procedure c2_warp completed at 2018/10/05 16:02:32.126
+Applied rot(image,2.01532,1,510.257,506.607,/interp,/pivot) after rectification.
+NMISSING =        0
+Writing FITS file to /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_1/110214/c2/25361932.fts
+Procedure reduce_level_1 ended at 2018/10/05 16:02:35.020
+
+
+
+
+
+
+Procedure reduce_level_1.pro,vreduce_level_1.pro	1.67, 02/01/16 started at 2018/10/05 16:02:39.431
+Input = /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_05/110214/c2/2011-02-14T18_24_05_22361936.fts
+22361936.fts 2011/02/14t18:24:05.535 Orange Clear
+Procedure c2_calibrate started at 2018/10/05 16:02:39.443
+Procedure c2_calibrate completed at 2018/10/05 16:02:42.470
+Procedure c2_warp started at 2018/10/05 16:02:42.470
+Procedure c2_warp completed at 2018/10/05 16:02:44.551
+Applied rot(image,2.00979,1,510.257,506.607,/interp,/pivot) after rectification.
+NMISSING =        0
+Writing FITS file to /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_1/110214/c2/25361936.fts
+Procedure reduce_level_1 ended at 2018/10/05 16:02:47.136
+
+
+
+
+
+
+Procedure reduce_level_1.pro,vreduce_level_1.pro	1.67, 02/01/16 started at 2018/10/05 16:02:49.850
+Input = /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_05/110214/c2/2011-02-14T19_12_07_22361939.fts
+22361939.fts 2011/02/14t19:12:07.005 Orange Clear
+Procedure c2_calibrate started at 2018/10/05 16:02:49.864
+Procedure c2_calibrate completed at 2018/10/05 16:02:52.894
+Procedure c2_warp started at 2018/10/05 16:02:52.894
+Procedure c2_warp completed at 2018/10/05 16:02:54.968
+Applied rot(image,2.00652,1,510.259,506.611,/interp,/pivot) after rectification.
+NMISSING =        0
+Writing FITS file to /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_1/110214/c2/25361939.fts
+Procedure reduce_level_1 ended at 2018/10/05 16:02:57.568
+
+
+
+
+
+
+Procedure reduce_level_1.pro,vreduce_level_1.pro	1.67, 02/01/16 started at 2018/10/05 16:02:59.892
+Input = /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_05/110214/c2/2011-02-14T20_00_07_22361943.fts
+22361943.fts 2011/02/14t20:00:07.076 Orange Clear
+Procedure c2_calibrate started at 2018/10/05 16:02:59.903
+Procedure c2_calibrate completed at 2018/10/05 16:03:02.934
+Procedure c2_warp started at 2018/10/05 16:03:02.935
+Procedure c2_warp completed at 2018/10/05 16:03:05.016
+Applied rot(image,2.0032,1,510.259,506.622,/interp,/pivot) after rectification.
+NMISSING =        0
+Writing FITS file to /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_1/110214/c2/25361943.fts
+Procedure reduce_level_1 ended at 2018/10/05 16:03:07.604
+
+
+
+
+
+
+Procedure reduce_level_1.pro,vreduce_level_1.pro	1.67, 02/01/16 started at 2018/10/05 16:03:10.551
+Input = /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_05/110214/c2/2011-02-14T20_52_46_22361948.fts
+22361948.fts 2011/02/14t20:52:46.144 Blue Clear
+Procedure c2_calibrate started at 2018/10/05 16:03:10.555
+Procedure c2_calibrate completed at 2018/10/05 16:03:14.641
+Procedure c2_warp started at 2018/10/05 16:03:14.641
+Procedure c2_warp completed at 2018/10/05 16:03:16.687
+Applied rot(image,1.99506,1,255.133,253.314,/interp,/pivot) after rectification.
+NMISSING =        0
+Writing FITS file to /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_1/110214/c2/25361948.fts
+Procedure reduce_level_1 ended at 2018/10/05 16:03:18.902
+
+
+
+
+
+
+Procedure reduce_level_1.pro,vreduce_level_1.pro	1.67, 02/01/16 started at 2018/10/05 16:03:21.469
+Input = /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_05/110214/c2/2011-02-14T21_49_27_22361956.fts
+22361956.fts 2011/02/14t21:49:27.809 Orange Clear
+Procedure c2_calibrate started at 2018/10/05 16:03:21.487
+Procedure c2_calibrate completed at 2018/10/05 16:03:24.536
+Procedure c2_warp started at 2018/10/05 16:03:24.536
+Procedure c2_warp completed at 2018/10/05 16:03:26.614
+Applied rot(image,1.98886,1,510.266,506.627,/interp,/pivot) after rectification.
+NMISSING =        0
+Writing FITS file to /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_1/110214/c2/25361956.fts
+Procedure reduce_level_1 ended at 2018/10/05 16:03:29.204
+
+
+
+
+
+
+Procedure reduce_level_1.pro,vreduce_level_1.pro	1.67, 02/01/16 started at 2018/10/05 16:03:31.925
+Input = /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_05/110214/c2/2011-02-14T22_36_05_22361960.fts
+22361960.fts 2011/02/14t22:36:05.688 Orange Clear
+Procedure c2_calibrate started at 2018/10/05 16:03:31.938
+Procedure c2_calibrate completed at 2018/10/05 16:03:34.964
+Procedure c2_warp started at 2018/10/05 16:03:34.965
+Procedure c2_warp completed at 2018/10/05 16:03:37.049
+Applied rot(image,1.98027,1,510.259,506.627,/interp,/pivot) after rectification.
+NMISSING =        0
+Writing FITS file to /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_1/110214/c2/25361960.fts
+Procedure reduce_level_1 ended at 2018/10/05 16:03:39.632
+
+
+
+
+
+
+Procedure reduce_level_1.pro,vreduce_level_1.pro	1.67, 02/01/16 started at 2018/10/05 16:03:42.587
+Input = /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_05/110214/c2/2011-02-14T23_24_05_22361963.fts
+22361963.fts 2011/02/14t23:24:05.950 Orange Clear
+Procedure c2_calibrate started at 2018/10/05 16:03:42.603
+Procedure c2_calibrate completed at 2018/10/05 16:03:45.624
+Procedure c2_warp started at 2018/10/05 16:03:45.624
+Procedure c2_warp completed at 2018/10/05 16:03:47.704
+Applied rot(image,1.97789,1,510.257,506.622,/interp,/pivot) after rectification.
+NMISSING =        0
+Writing FITS file to /media/hebe/ADATA838/data/francisco/archive/soho/private/data/processed/lasco/level_1/110214/c2/25361963.fts
+Procedure reduce_level_1 ended at 2018/10/05 16:03:50.288
+
+
+
+
+
+
