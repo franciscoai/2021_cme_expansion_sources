@@ -14,12 +14,13 @@ import matplotlib.colors as colors
 import os
 
 class SelectImgPoints:
-    def __init__(self, fits_files, output_file,diff=False, coord_type='heliographic_stonyhurst'): # heliographic_carrington or heliographic_stonyhurst
+    def __init__(self, fits_files, output_file,diff=False, coord_type='heliographic_stonyhurst', roi=None): # heliographic_carrington or heliographic_stonyhurst
         self.fits_files = fits_files
         self.output_file = output_file
         self.points = []
         self.diff = diff
         self.coord_type = coord_type
+        self.roi = roi
         # create odirectory if it does not exist
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
@@ -29,9 +30,28 @@ class SelectImgPoints:
             for i in range(len(self.fits_files)-1):
                 # Read the .fits file as a Sunpy MAPS object
                 map_seq = sunpy.map.Map([self.fits_files[i], self.fits_files[i+1]], sequence=True)
+                #checks compatible image sizes
+                if map_seq[0].data.shape != map_seq[1].data.shape:
+                    print(f'Warning: {self.fits_files[i]} and {self.fits_files[i+1]} have different image sizes')
+                    # resamples to match the smallest image
+                    if map_seq[0].data.shape[0] < map_seq[1].data.shape[0]:
+                        res_map1 = map_seq[1].resample(map_seq[0].data.shape * u.pixel)
+                        map_seq = sunpy.map.Map([map_seq[0], res_map1], sequence=True)
+                    else:
+                        res_map0 = map_seq[0].resample(map_seq[1].data.shape * u.pixel)
+                        map_seq = sunpy.map.Map([res_map0,map_seq[1]], sequence=True)                                              
                 # Plot the image
-                map = sunpy.map.Map(map_seq[0].quantity - map_seq[1].quantity, map_seq[0].meta)
-                map.plot(norm=colors.Normalize(vmin=-200, vmax=200), cmap='Greys_r')
+                map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[0].meta)
+                # if roi is specified, plot only that portion of the map
+                if self.roi is not None:
+                    top_right = SkyCoord(self.roi[0]*u.arcsec, self.roi[1]*u.arcsec, frame=map.coordinate_frame)
+                    bottom_left = SkyCoord(self.roi[2]*u.arcsec, self.roi[3]*u.arcsec, frame=map.coordinate_frame)
+                    map = map.submap(bottom_left, top_right=top_right)
+                    print(f'Warning: ROI box [arcsec] specified. Plotting only the portion of the image within the box {self.roi}')
+                m = np.mean(map.data)
+                sd = np.std(map.data)
+                # plots with white as max and black as min
+                map.plot(norm=colors.Normalize(vmin=m-3*sd, vmax=m+3*sd), cmap='gray')
                 # Allow the user to click on the image to select points
                 points = plt.ginput(n=-1, timeout=0)
                 # Convert the selected pixel values to Carrington coordinates using the WCS information in the .fits file and Sunpy built in functions
@@ -43,11 +63,11 @@ class SelectImgPoints:
                 # Save the selected points to a common list including the file basename
                 self.points.append([self.fits_files[i].split('/')[-1], carrington_lon, carrington_lat])
                 plt.close()
-                # prompts the user if they want to continue selecting points or stop
-                if i < len(self.fits_files)-2:
-                    cont = input('Do you want to continue selecting points? (y/n): ')
-                    if cont.lower() == 'n':
-                        break
+                # # prompts the user if they want to continue selecting points or stop
+                # if i < len(self.fits_files)-2:
+                #     cont = input('Do you want to continue selecting points? (y/n): ')
+                #     if cont.lower() == 'n':
+                #         break
             # Save the selected points to a .csv file   
             df = pd.DataFrame(self.points, columns=['file', 'lon [arcsec]', 'lat [arcsec]'])
             df.to_csv(self.output_file, index=False)
@@ -68,11 +88,11 @@ class SelectImgPoints:
                 # Save the selected points to a common list including the file basename
                 self.points.append([fits_file.split('/')[-1], carrington_lon, carrington_lat])
                 plt.close()
-                # prompts the user if they want to continue selecting points or stop
-                if i < len(self.fits_files)-2:
-                    cont = input('Do you want to continue selecting points? (y/n): ')
-                    if cont.lower() == 'n':
-                        break                
+                # # prompts the user if they want to continue selecting points or stop
+                # if i < len(self.fits_files)-2:
+                #     cont = input('Do you want to continue selecting points? (y/n): ')
+                #     if cont.lower() == 'n':
+                #         break                
             # Save the selected points to a .csv file   
             df = pd.DataFrame(self.points, columns=['file', 'lon [arcsec]', 'lat [arcsec]'])
             df.to_csv(self.output_file, index=False)

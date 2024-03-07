@@ -4,12 +4,13 @@
 import pandas as pd
 import os
 from select_img_points import SelectImgPoints
+import numpy as np
 
 # Constants
 # Event to process
 id = 1
 # cadence of the differential images in seconds
-cadence = 60.*30
+cadence = 60.*15
 # Path to the main .csv file
 csv= os.getcwd() + '/input_data/ar.csv'
 databse= '/gehme/data'
@@ -47,14 +48,15 @@ def get_event_times(event):
 # EUVI-A: YYYYMMDD_HHmmSS_14euA.fts
 # EUVI-B: YYYYMMDD_HHmmSS_14euB.fts
 def get_time_from_file(file, instrument):
+    name = file.split('/')[-1]
     if instrument == 'AIA':
-        time = file.split('193A_')[1].split('.')[0]
+        time = name.split('193A_')[1].split('.')[0]
         time = pd.to_datetime(time, format='%Y-%m-%dT%H_%M_%S')
     elif instrument == 'EUVI-A':
-        time = file.split('.')[0].split('e')[0]
+        time = name.split('.')[0].split('_14e')[0]
         time = pd.to_datetime(time, format='%Y%m%d_%H%M%S')
     elif instrument == 'EUVI-B':
-        time = file.split('.')[0].split('e')[0]
+        time = name.split('.')[0].split('_14e')[0]
         time = pd.to_datetime(time, format='%Y%m%d_%H%M%S')
     return time
 
@@ -67,12 +69,12 @@ def get_fits_files_paths(start_time, end_time, instrument, database):
         instrument_path = os.path.join(instrument_path, current_day)        
     elif instrument == 'EUVI-A':
         instrument_path = euvia_instrument_path
-        instrument_path = os.path.join(instrument_path,'preped', current_day)   
+        instrument_path = os.path.join(instrument_path, current_day,'preped')   
     elif instrument == 'EUVI-B':
         instrument_path = euvib_instrument_path
-        instrument_path = os.path.join(instrument_path,'preped', current_day)           
+        instrument_path = os.path.join(instrument_path, current_day,'preped')            
     # Get all the .fits files that have a datetime within start_time and end_time from the database of the instrument specified
-    files = [os.path.join(instrument_path, file) for file in os.listdir(instrument_path) if file.endswith('.fits')]
+    files = [os.path.join(instrument_path, file) for file in os.listdir(instrument_path) if file.endswith('.fits') or file.endswith('.fts')]
     files = [file for file in files if start_time <= get_time_from_file(file, instrument) <= end_time]
     return sorted(files)
 
@@ -109,15 +111,24 @@ start_time, end_time = get_event_times(event)
 # Get the .fits files paths of the selected event from the database of the instrument specified in "Instrument" column
 instrument = event['Instrument'].values[0]
 fits_files = get_fits_files_paths(start_time, end_time, instrument, databse)
+if len(fits_files) == 0:
+    print(f'Error: No fits files found for event {id} in the specified time range')
+    os._exit(0)
 if cadence > 0:
     fits_files = filter_fits_files(fits_files, cadence)
 if len(fits_files) == 0:
-    print(f'No .fits files found for event {id} in the specified time range')
+    print(f'Error: No fits files found for event {id} in the specified time range with the specified cadence')
     os._exit(0)
 # create the output file
 output_file = os.path.join(odir, f'event_{id}_points.csv')
+# get roi from df column ROI box [arcsec], expressed in arcsec. Format is xmin/xmax/ymin/ymax
+roi = event['ROI box [arcsec]'].values[0]
+if type(roi) == str:
+    roi = [int(i) for i in roi.split('/')]
+else:
+    roi = None
 # Create an instance of the SelectImgPoints that selects points on the images and saves them to a .csv file
-select_img_points = SelectImgPoints(fits_files, output_file, diff=True)
+select_img_points = SelectImgPoints(fits_files, output_file, diff=True, roi=roi)
 # Select points
 select_img_points.select_points()
 # Print the path of the output file
