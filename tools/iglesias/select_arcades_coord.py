@@ -1,14 +1,16 @@
 # Script to read the arcades initial and final times from the main .csv file and iteratively read images in that time range and allow the user to select points on the images
 # using select_img_points.py
 
+
+from select_img_points import SelectImgPoints
 import pandas as pd
 import os
-from select_img_points import SelectImgPoints
 import numpy as np
+
 
 # Constants
 # Event to process
-id = 1
+id = 2
 # cadence of the differential images in seconds
 cadence = 60.*15
 # Path to the main .csv file
