@@ -10,12 +10,12 @@ import numpy as np
 
 # Constants
 # Event to process
-id = 12
-overwrite = False # if True, the output file will be overwritten if it already exists
+id = 1
+overwrite = True # if True, the output file will be overwritten if it already exists
 # time difference of the differential images in seconds
 img_time_diff = 60.*45
 # minima cadence of the differential images in seconds
-cadence = 60.*15
+cadence = 60.*0.5
 # Path to the main .csv file
 csv= os.getcwd() + '/input_data/ar.csv'
 databse= '/gehme/data'
@@ -55,8 +55,8 @@ def get_event_times(event):
 def get_time_from_file(file, instrument):
     name = file.split('/')[-1]
     if instrument == 'AIA':
-        time = name.split('193A_')[1].split('.')[0]
-        time = pd.to_datetime(time, format='%Y-%m-%dT%H_%M_%S')
+        time = name.split('AIA')[1].split('_0193')[0]
+        time = pd.to_datetime(time, format='%Y%m%d_%H%M%S')
     elif instrument == 'EUVI-A':
         time = name.split('.')[0].split('_14e')[0]
         time = pd.to_datetime(time, format='%Y%m%d_%H%M%S')
@@ -71,7 +71,7 @@ def get_fits_files_paths(start_time, end_time, instrument, database):
     current_day = start_time.strftime('%Y%m%d')
     if instrument == 'AIA':
         instrument_path = aia_instrument_path
-        instrument_path = os.path.join(instrument_path, current_day)        
+        instrument_path = os.path.join(instrument_path, current_day,'preped')    
     elif instrument == 'EUVI-A':
         instrument_path = euvia_instrument_path
         instrument_path = os.path.join(instrument_path, current_day,'preped')   
@@ -132,10 +132,14 @@ def filter_fits_files(fits_files, img_time_diff, cadance=None):
         new_time_diff = [i.total_seconds() for i in new_time_diff]
         # keeps only pairs of consecutive files with cadence greater than cadence
         final_files = []
+        acc_new_time_diff=0
         for i in range(len(new_time_diff)):
-            if new_time_diff[i] > cadance:
+            if  acc_new_time_diff > cadance:
                 final_files.append(new_files[2*i])
                 final_files.append(new_files[2*i+1])
+                acc_new_time_diff=0
+            else:
+                acc_new_time_diff+=new_time_diff[i]
     return final_files
 # main
 # Read the main .csv file
