@@ -10,8 +10,11 @@ import numpy as np
 
 # Constants
 # Event to process
-id = 2
-# cadence of the differential images in seconds
+id = 12
+overwrite = False # if True, the output file will be overwritten if it already exists
+# time difference of the differential images in seconds
+img_time_diff = 60.*45
+# minima cadence of the differential images in seconds
 cadence = 60.*15
 # Path to the main .csv file
 csv= os.getcwd() + '/input_data/ar.csv'
@@ -74,35 +77,66 @@ def get_fits_files_paths(start_time, end_time, instrument, database):
         instrument_path = os.path.join(instrument_path, current_day,'preped')   
     elif instrument == 'EUVI-B':
         instrument_path = euvib_instrument_path
-        instrument_path = os.path.join(instrument_path, current_day,'preped')            
-    # Get all the .fits files that have a datetime within start_time and end_time from the database of the instrument specified
-    files = [os.path.join(instrument_path, file) for file in os.listdir(instrument_path) if file.endswith('.fits') or file.endswith('.fts')]
-    files = [file for file in files if start_time <= get_time_from_file(file, instrument) <= end_time]
-    return sorted(files)
-
-def filter_fits_files(fits_files, cadence):
+        instrument_path = os.path.join(instrument_path, current_day,'preped')   
+    # get YYYYMMDD from end_time          
+    last_day = end_time.strftime('%Y%m%d')
+    # if start_time and end_time are in different days, get all the files from the start day and the end day
+    if current_day != last_day:
+        # if current_day does not exists, skips it
+        if os.path.exists(instrument_path):
+            files = [os.path.join(instrument_path, file) for file in os.listdir(instrument_path) if file.endswith('.fits') or file.endswith('.fts')]
+            files = [file for file in files if start_time <= get_time_from_file(file, instrument) <= end_time]
+        else:
+            files = []
+            print(f'Warning: No files found for {instrument} in {current_day}')
+        # get all the files from the last day if it exists
+        instrument_path = instrument_path.replace(current_day, last_day)
+        if os.path.exists(instrument_path):
+            files += [os.path.join(instrument_path, file) for file in os.listdir(instrument_path) if file.endswith('.fits') or file.endswith('.fts')]
+            files = [file for file in files if start_time <= get_time_from_file(file, instrument) <= end_time]
+        else:
+            print(f'Warning: No files found for {instrument} in {last_day}')
+        return sorted(files)
+    else:
+        files = [os.path.join(instrument_path, file) for file in os.listdir(instrument_path) if file.endswith('.fits') or file.endswith('.fts')]
+        files = [file for file in files if start_time <= get_time_from_file(file, instrument) <= end_time]
+        return sorted(files)
+    
+def filter_fits_files(fits_files, img_time_diff, cadance=None):
     # get the time of all files
     times = [get_time_from_file(file, instrument) for file in fits_files]
     # get the time difference between consecutive files
     time_diff = [j-i for i, j in zip(times[:-1], times[1:])]
     # get the time difference in seconds
     time_diff = [i.total_seconds() for i in time_diff]
-    # starting from the first, select only files that are at least cadence seconds apart. If the jump is 1.5*cadence print a warning
-    new_files = [fits_files[0]]
-    flag=0
-    for i, t in enumerate(time_diff):
-        if flag==0:
-            acc_t = t
-        else:
-            acc_t += t
-        if acc_t >= cadence:
-            new_files.append(fits_files[i+1])
-            flag=0
-        elif acc_t >= 1.5*cadence:
-            print(f'Warning: time difference between {fits_files[i]} and {fits_files[i+1]} is {t} seconds')
-        else:
-            flag=1
-    return new_files
+    # For each element in fits_files returns two elements, the element itself and the next file that has 
+    # an accumulated time difference greater than img_time_diff
+    new_files = []
+    for i in range(len(time_diff)):
+        acc_time_diff = 0
+        j = i
+        while acc_time_diff < img_time_diff:
+            acc_time_diff += time_diff[j]
+            j += 1
+            if j == len(time_diff):
+                break
+        if acc_time_diff >= img_time_diff:
+            new_files.append(fits_files[i])
+            new_files.append(fits_files[j])        
+    # keeps only pairs of consecutive files with cadence greater than cadence
+    final_files = new_files.copy()
+    if cadance is not None:
+        # computes the new time_diff
+        times = [get_time_from_file(file, instrument) for file in new_files[0::2]]  
+        new_time_diff = [j-i for i, j in zip(times[:-1], times[1:])]
+        new_time_diff = [i.total_seconds() for i in new_time_diff]
+        # keeps only pairs of consecutive files with cadence greater than cadence
+        final_files = []
+        for i in range(len(new_time_diff)):
+            if new_time_diff[i] > cadance:
+                final_files.append(new_files[2*i])
+                final_files.append(new_files[2*i+1])
+    return final_files
 # main
 # Read the main .csv file
 df = read_main_csv(csv)
@@ -116,10 +150,10 @@ fits_files = get_fits_files_paths(start_time, end_time, instrument, databse)
 if len(fits_files) == 0:
     print(f'Error: No fits files found for event {id} in the specified time range')
     os._exit(0)
-if cadence > 0:
-    fits_files = filter_fits_files(fits_files, cadence)
+if img_time_diff > 0:
+    fits_files = filter_fits_files(fits_files, img_time_diff, cadance=cadence)
 if len(fits_files) == 0:
-    print(f'Error: No fits files found for event {id} in the specified time range with the specified cadence')
+    print(f'Error: No fits files found for event {id} in the specified time range with the specified img_time_diff')
     os._exit(0)
 # create the output file
 output_file = os.path.join(odir, f'event_{id}_points.csv')
@@ -130,7 +164,7 @@ if type(roi) == str:
 else:
     roi = None
 # Create an instance of the SelectImgPoints that selects points on the images and saves them to a .csv file
-select_img_points = SelectImgPoints(fits_files, output_file, diff=True, roi=roi)
+select_img_points = SelectImgPoints(fits_files, output_file, diff=True, roi=roi, overwrite=overwrite)
 # Select points
 select_img_points.select_points()
 # Print the path of the output file
