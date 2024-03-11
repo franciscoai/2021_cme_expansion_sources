@@ -14,19 +14,23 @@ import matplotlib.colors as colors
 import os
 
 class SelectImgPoints:
-    def __init__(self, fits_files, output_file,diff=False, coord_type='heliographic_stonyhurst', roi=None): # heliographic_carrington or heliographic_stonyhurst
+    def __init__(self, fits_files, output_file,diff=False, coord_type='heliographic_stonyhurst', roi=None, overwrite=False): # heliographic_carrington or heliographic_stonyhurst
         self.fits_files = fits_files
         self.output_file = output_file
         self.points = []
         self.diff = diff
         self.coord_type = coord_type
         self.roi = roi
+        self.overwrite = overwrite
         # create odirectory if it does not exist
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        if os.path.isfile(self.output_file) and not self.overwrite:
+            print(f'Error: File {self.output_file} already exists. Use overwrite=True to overwrite it')
+            os._exit(0)        
 
     def select_points(self):
         if self.diff:
-        # if diff, then reas two consecutive files and computes the difference before plotting and selecting points
+        # if diff, then substract two consecutive files and computes the difference before plotting and selecting points
             for i in range(len(self.fits_files)-1):
                 print('Reading image '+ str(i) +' of '+ str(len(self.fits_files)-1))
                 # Read the .fits file as a Sunpy MAPS object
@@ -42,6 +46,8 @@ class SelectImgPoints:
                         res_map0 = map_seq[0].resample(map_seq[1].data.shape * u.pixel)
                         map_seq = sunpy.map.Map([res_map0,map_seq[1]], sequence=True)                                              
                 # Plot the image
+                # uses the name of the two files to name the plot
+                title = self.fits_files[i].split('/')[-1] + ' - ' + self.fits_files[i+1].split('/')[-1]
                 map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[0].meta)
                 # if roi is specified, plot only that portion of the map
                 if self.roi is not None:
@@ -52,7 +58,7 @@ class SelectImgPoints:
                 m = np.mean(map.data)
                 sd = np.std(map.data)
                 # plots with white as max and black as min
-                map.plot(norm=colors.Normalize(vmin=m-3*sd, vmax=m+3*sd), cmap='gray')
+                map.plot(norm=colors.Normalize(vmin=m-3*sd, vmax=m+3*sd), cmap='gray', title=title)
                 # Allow the user to click on the image to select points
                 points = plt.ginput(n=-1, timeout=0)
                 # Convert the selected pixel values to Carrington coordinates using the WCS information in the .fits file and Sunpy built in functions
