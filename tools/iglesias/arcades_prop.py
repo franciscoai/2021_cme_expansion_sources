@@ -52,7 +52,7 @@ for f in files:
     df['fp2'] = df.apply(lambda x: [SkyCoord(x['lon2 [arcsec]'][i], x['lat2 [arcsec]'][i], unit='arcsec',frame="heliographic_carrington", observer="earth",  obstime=x['date']) for i in range(len(x['lon2 [arcsec]']))], axis=1)
 
     # for each row, calculate the great arc distance distance between each footpoint (arcade width) and saves it in an array in a new column
-    df['width [arcsec]'] = df.apply(lambda x: np.array([float(GreatArc(x['fp1'][i], x['fp2'][i]).distances()[1].value) for i in range(len(x['fp1']))]), axis=1)
+    df['width [arcsec]'] = df.apply(lambda x: np.array([float(GreatArc(x['fp1'][i], x['fp2'][i]).distances()[-1].value) for i in range(len(x['fp1']))]), axis=1)
 
     # for each row and each footpoint group, computes the total distance by adding the euclidean distance between conscutive footpoints
     df['length1 [arcsec]'] = df.apply(lambda x: np.array([np.sqrt((x['lon1 [arcsec]'][i]-x['lon1 [arcsec]'][i+1])**2 + (x['lat1 [arcsec]'][i]-x['lat1 [arcsec]'][i+1])**2) for i in range(len(x['lon1 [arcsec]'])-1)]), axis=1)
@@ -83,25 +83,34 @@ for f in files:
     # scatter plot of the footpoints, each group with a diff color
     for i in range(len(df)):
         plt.figure(figsize=(12,7))
-        plt.scatter(df['lon1 [arcsec]'][i], df['lat1 [arcsec]'][i], label=df['date'][i], color='red')
-        plt.scatter(df['lon2 [arcsec]'][i], df['lat2 [arcsec]'][i], label=df['date'][i], color='blue')
+        for j in range(len(df['fp1'][i])):
+            fp1= df['fp1'][i][j]
+            fp2= df['fp2'][i][j]
+            Solve why long is shown like that ?
+            Also why arcs are not bended ?
+            plt.scatter(fp1.lon.arcsec, fp1.lat.arcsec, color='r')
+            plt.scatter(fp2.lon.arcsec, fp2.lat.arcsec, color='b')
+            arc = GreatArc(fp1, fp2, points=20)
+            arc_lon = arc.coordinates().lon.arcsec
+            arc_lat = arc.coordinates().lat.arcsec
+            plt.plot(arc_lon, arc_lat, color='k')
         plt.gca().set_aspect('equal')
         plt.xlabel('Longitude [arcsec]')
         plt.ylabel('Latitude [arcsec]')
         plt.title('Arcades footpoints')
-        if i == 0:
-            all_lon_flatten = np.array([])
-            all_lat_flatten = np.array([])
-            for j in range(len(df)):
-                all_lon_flatten = np.append(all_lon_flatten, df['lon [arcsec]'][j])
-                all_lat_flatten = np.append(all_lat_flatten, df['lat [arcsec]'][j])
-            xlim = [np.min(all_lon_flatten), np.max(all_lon_flatten)]
-            ylim = [np.min(all_lat_flatten), np.max(all_lat_flatten)]
-            plt.xlim(xlim)
-            plt.ylim(ylim)
-        else:
-            plt.xlim(xlim)
-            plt.ylim(ylim)
+        # if i == 0:
+        #     all_lon_flatten = np.array([])
+        #     all_lat_flatten = np.array([])
+        #     for j in range(len(df)):
+        #         all_lon_flatten = np.append(all_lon_flatten, df['lon [arcsec]'][j])
+        #         all_lat_flatten = np.append(all_lat_flatten, df['lat [arcsec]'][j])
+        #     xlim = [np.min(all_lon_flatten), np.max(all_lon_flatten)]
+        #     ylim = [np.min(all_lat_flatten), np.max(all_lat_flatten)]
+        #     plt.xlim(xlim)
+        #     plt.ylim(ylim)
+        # else:
+        #     plt.xlim(xlim)
+        #     plt.ylim(ylim)
         
         oimage = os.path.join(odir_ev, f.split('/')[-1].replace('.csv', '_footpoints'+str(i)+'.png'))
         plt.savefig(oimage)
