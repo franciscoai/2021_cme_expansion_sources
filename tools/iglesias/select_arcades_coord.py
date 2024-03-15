@@ -13,9 +13,9 @@ import numpy as np
 id = 1
 overwrite = True # if True, the output file will be overwritten if it already exists
 # time difference of the differential images in seconds
-img_time_diff = 60.*45
-# minima cadence of the differential images in seconds
-cadence = 60.*0.5
+img_time_diff = 60.*40.
+# minima cadence of the differential images in seconds, use None to keep all the images
+cadence = 60.*20.
 # Path to the main .csv file
 csv= os.getcwd() + '/input_data/ar.csv'
 databse= '/gehme/data'
@@ -112,17 +112,18 @@ def filter_fits_files(fits_files, img_time_diff, cadance=None):
     # For each element in fits_files returns two elements, the element itself and the next file that has 
     # an accumulated time difference greater than img_time_diff
     new_files = []
+    acc_time_diff = 0
     for i in range(len(time_diff)):
-        acc_time_diff = 0
-        j = i
-        while acc_time_diff < img_time_diff:
-            acc_time_diff += time_diff[j]
-            j += 1
-            if j == len(time_diff):
+        new_files.append(fits_files[i])
+        acc_time_diff += time_diff[i]
+        for j in range(i+1, len(time_diff)):
+            if acc_time_diff >= img_time_diff:
+                new_files.append(fits_files[j])
+                acc_time_diff = 0
                 break
-        if acc_time_diff >= img_time_diff:
-            new_files.append(fits_files[i])
-            new_files.append(fits_files[j])        
+            else:
+                acc_time_diff += time_diff[j]          
+
     # keeps only pairs of consecutive files with cadence greater than cadence
     final_files = new_files.copy()
     if cadance is not None:
@@ -131,15 +132,19 @@ def filter_fits_files(fits_files, img_time_diff, cadance=None):
         new_time_diff = [j-i for i, j in zip(times[:-1], times[1:])]
         new_time_diff = [i.total_seconds() for i in new_time_diff]
         # keeps only pairs of consecutive files with cadence greater than cadence
-        final_files = []
-        acc_new_time_diff=0
-        for i in range(len(new_time_diff)):
-            if  acc_new_time_diff > cadance:
+        final_files = [new_files[0],new_files[1]]
+        acc_new_time_diff=new_time_diff[0]
+        for i in range(1,len(new_time_diff)-1):
+            if  acc_new_time_diff >= cadance:
                 final_files.append(new_files[2*i])
                 final_files.append(new_files[2*i+1])
                 acc_new_time_diff=0
             else:
                 acc_new_time_diff+=new_time_diff[i]
+    #print side by side the filenames only of the pairs
+    print('Selected files:')
+    for i in range(0,len(final_files),2):
+        print(final_files[i].split('/')[-1], final_files[i+1].split('/')[-1])
     return final_files
 # main
 # Read the main .csv file

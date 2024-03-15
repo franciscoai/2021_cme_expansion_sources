@@ -32,12 +32,12 @@ class SelectImgPoints:
         if self.diff:
         # if diff, then substract two consecutive files and computes the difference before plotting and selecting points
             for i in range(len(self.fits_files)-1):
-                print('Reading image '+ str(i) +' of '+ str(len(self.fits_files)-1))
+                print('Reading image '+ str(2*i) +' of '+ str(len(self.fits_files)-1))
                 # Read the .fits file as a Sunpy MAPS object
-                map_seq = sunpy.map.Map([self.fits_files[i], self.fits_files[i+1]], sequence=True)
+                map_seq = sunpy.map.Map([self.fits_files[2*i], self.fits_files[2*i+1]], sequence=True)
                 #checks compatible image sizes
                 if map_seq[0].data.shape != map_seq[1].data.shape:
-                    print(f'Warning: {self.fits_files[i]} and {self.fits_files[i+1]} have different image sizes')
+                    print(f'Warning: {self.fits_files[2*i]} and {self.fits_files[2*i+1]} have different image sizes')
                     # resamples to match the smallest image
                     if map_seq[0].data.shape[0] < map_seq[1].data.shape[0]:
                         res_map1 = map_seq[1].resample(map_seq[0].data.shape * u.pixel)
@@ -47,7 +47,7 @@ class SelectImgPoints:
                         map_seq = sunpy.map.Map([res_map0,map_seq[1]], sequence=True)                                              
                 # Plot the image
                 # uses the name of the two files to name the plot
-                title = self.fits_files[i].split('/')[-1] + ' - ' + self.fits_files[i+1].split('/')[-1]
+                title = self.fits_files[2*i+1].split('/')[-1]  + ' - ' +  self.fits_files[2*i].split('/')[-1] 
                 map = sunpy.map.Map(map_seq[1].quantity - map_seq[0].quantity, map_seq[0].meta)
                 # if roi is specified, plot only that portion of the map
                 if self.roi is not None:
@@ -63,12 +63,12 @@ class SelectImgPoints:
                 points = plt.ginput(n=-1, timeout=0)
                 # Convert the selected pixel values to Carrington coordinates using the WCS information in the .fits file and Sunpy built in functions
                 wcs = map.wcs
-                wcs_points= [wcs.pixel_to_world(i[0], i[1]) for i in points]
-                carrington_points = [SkyCoord(i.Tx, i.Ty, frame=self.coord_type, obstime=map.date) for i in wcs_points]
-                carrington_lon = [i.lon.arcsec for i in carrington_points]
-                carrington_lat = [i.lat.arcsec for i in carrington_points]
+                wcs_points= [wcs.pixel_to_world(j[0], j[1]) for j in points]
+                carrington_points = [SkyCoord(j.Tx, j.Ty, frame=self.coord_type, obstime=map.date) for j in wcs_points]
+                carrington_lon = [j.lon.arcsec for j in carrington_points]
+                carrington_lat = [j.lat.arcsec for j in carrington_points]
                 # Save the selected points to a common list including the file basename
-                self.points.append([self.fits_files[i].split('/')[-1], carrington_lon, carrington_lat])
+                self.points.append([self.fits_files[2*i].split('/')[-1], carrington_lon, carrington_lat])
                 plt.close()
                 # # prompts the user if they want to continue selecting points or stop
                 # if i < len(self.fits_files)-2:
