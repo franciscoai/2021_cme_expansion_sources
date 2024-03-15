@@ -31,8 +31,8 @@ class SelectImgPoints:
     def select_points(self):
         if self.diff:
         # if diff, then substract two consecutive files and computes the difference before plotting and selecting points
-            for i in range(len(self.fits_files)-1):
-                print('Reading image '+ str(2*i) +' of '+ str(len(self.fits_files)-1))
+            for i in range(len(self.fits_files)//2-1):
+                print('Reading image '+ str(i+1) + ' of ' + str(len(self.fits_files)//2-1))
                 # Read the .fits file as a Sunpy MAPS object
                 map_seq = sunpy.map.Map([self.fits_files[2*i], self.fits_files[2*i+1]], sequence=True)
                 #checks compatible image sizes

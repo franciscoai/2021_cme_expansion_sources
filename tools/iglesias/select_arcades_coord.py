@@ -138,11 +138,11 @@ def filter_fits_files(fits_files, img_time_diff, cadance=None):
             if  acc_new_time_diff >= cadance:
                 final_files.append(new_files[2*i])
                 final_files.append(new_files[2*i+1])
-                acc_new_time_diff=0
+                acc_new_time_diff=new_time_diff[i]
             else:
                 acc_new_time_diff+=new_time_diff[i]
     #print side by side the filenames only of the pairs
-    print('Selected files:')
+    print('Selected ' + str(len(final_files)//2) + ' file pairs')
     for i in range(0,len(final_files),2):
         print(final_files[i].split('/')[-1], final_files[i+1].split('/')[-1])
     return final_files
