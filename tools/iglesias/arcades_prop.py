@@ -27,12 +27,15 @@ arcsec2km = 725.27 # 1 arcsec = 725.27 km
 
 ##########
 # get .csv files from input_dir
-files = [os.path.join(input_dir,f) for f in os.listdir(input_dir) if f.endswith('.csv')]
+files = sorted([os.path.join(input_dir,f) for f in os.listdir(input_dir) if f.endswith('.csv')])
 print('Files found:', files)
 # process each file and save the output
 for f in files:
     df = pd.read_csv(f, header=0, delimiter=',')
-    df['date'] = pd.to_datetime(df['file'], format='AIA%Y%m%d_%H%M%S_0193.fits')
+    try:
+        df['date'] = pd.to_datetime(df['file'], format='AIA%Y%m%d_%H%M%S_0193.fits')
+    except:
+        df['date'] = pd.to_datetime(df['file'], format='%Y%m%d_%H%M%S_14euA.fts')    
     # delete rows with '[]' in colum 'lon [arcsec]'
     df = df[df['lon [arcsec]'] != '[]']
     # reset id to start from 0
@@ -41,29 +44,28 @@ for f in files:
     df['lon [arcsec]'] = df['lon [arcsec]'].apply(lambda x: np.array(x[1:-1].split(',')).astype(float))
     df['lat [arcsec]'] = df['lat [arcsec]'].apply(lambda x: np.array(x[1:-1].split(',')).astype(float))
 
-    # for each row, separeate the footpoints in two halves and saves then in a new column for each footpoint
-    df['lon1 [arcsec]'] = df['lon [arcsec]'].apply(lambda x: x[:int(len(x)/2)])
-    df['lon2 [arcsec]'] = df['lon [arcsec]'].apply(lambda x: x[int(len(x)/2):])
-    df['lat1 [arcsec]'] = df['lat [arcsec]'].apply(lambda x: x[:int(len(x)/2)])
-    df['lat2 [arcsec]'] = df['lat [arcsec]'].apply(lambda x: x[int(len(x)/2):])
-    
+    # for each row, if the number of points is even separeates the footpoints in two halves and saves each group in a new column
+    # if the number of points is odd, separeates the footpoints in three groups and saves each group in a new column
+    df['lon1 [arcsec]'] = df.apply(lambda x: x['lon [arcsec]'][:len(x['lon [arcsec]'])//2] if len(x['lon [arcsec]'])%2==0 else x['lon [arcsec]'][:len(x['lon [arcsec]'])//3], axis=1)
+    df['lat1 [arcsec]'] = df.apply(lambda x: x['lat [arcsec]'][:len(x['lat [arcsec]'])//2] if len(x['lat [arcsec]'])%2==0 else x['lat [arcsec]'][:len(x['lat [arcsec]'])//3], axis=1)
+    df['lon2 [arcsec]'] = df.apply(lambda x: x['lon [arcsec]'][len(x['lon [arcsec]'])//2:] if len(x['lon [arcsec]'])%2==0 else x['lon [arcsec]'][len(x['lon [arcsec]'])//3:2*len(x['lon [arcsec]'])//3], axis=1)
+    df['lat2 [arcsec]'] = df.apply(lambda x: x['lat [arcsec]'][len(x['lat [arcsec]'])//2:] if len(x['lat [arcsec]'])%2==0 else x['lat [arcsec]'][len(x['lat [arcsec]'])//3:2*len(x['lat [arcsec]'])//3], axis=1)
+    df['lon3 [arcsec]'] = df.apply(lambda x: x['lon [arcsec]'][2*len(x['lon [arcsec]'])//3:]*np.nan if len(x['lon [arcsec]'])%2==0 else x['lon [arcsec]'][2*len(x['lon [arcsec]'])//3:], axis=1)
+    df['lat3 [arcsec]'] = df.apply(lambda x: x['lat [arcsec]'][2*len(x['lat [arcsec]'])//3:]*np.nan if len(x['lat [arcsec]'])%2==0 else x['lat [arcsec]'][2*len(x['lat [arcsec]'])//3:], axis=1) 
+
     # get sky coord
-    df['fp1'] = df.apply(lambda x: [SkyCoord(x['lon1 [arcsec]'][i], x['lat1 [arcsec]'][i], unit='arcsec',frame="heliographic_carrington", observer="earth",  obstime=x['date']) for i in range(len(x['lon1 [arcsec]']))], axis=1)
-    df['fp2'] = df.apply(lambda x: [SkyCoord(x['lon2 [arcsec]'][i], x['lat2 [arcsec]'][i], unit='arcsec',frame="heliographic_carrington", observer="earth",  obstime=x['date']) for i in range(len(x['lon2 [arcsec]']))], axis=1)
+    df['fp1'] = df.apply(lambda x: [SkyCoord(x['lon1 [arcsec]'][i], x['lat1 [arcsec]'][i], unit='arcsec',frame="heliographic_stonyhurst", observer="earth",  obstime=x['date']) for i in range(len(x['lon1 [arcsec]']))], axis=1)
+    df['fp2'] = df.apply(lambda x: [SkyCoord(x['lon2 [arcsec]'][i], x['lat2 [arcsec]'][i], unit='arcsec',frame="heliographic_stonyhurst", observer="earth",  obstime=x['date']) for i in range(len(x['lon2 [arcsec]']))], axis=1)
 
     # for each row, calculate the great arc distance distance between each footpoint (arcade width) and saves it in an array in a new column
     df['width [arcsec]'] = df.apply(lambda x: np.array([float(GreatArc(x['fp1'][i], x['fp2'][i]).distances()[-1].value) for i in range(len(x['fp1']))]), axis=1)
 
-    # for each row and each footpoint group, computes the total distance by adding the euclidean distance between conscutive footpoints
+    # for each row and each footpoint group, computes the total distance by adding the euclidean distances between conscutive footpoints
     df['length1 [arcsec]'] = df.apply(lambda x: np.array([np.sqrt((x['lon1 [arcsec]'][i]-x['lon1 [arcsec]'][i+1])**2 + (x['lat1 [arcsec]'][i]-x['lat1 [arcsec]'][i+1])**2) for i in range(len(x['lon1 [arcsec]'])-1)]), axis=1)
     df['length2 [arcsec]'] = df.apply(lambda x: np.array([np.sqrt((x['lon2 [arcsec]'][i]-x['lon2 [arcsec]'][i+1])**2 + (x['lat2 [arcsec]'][i]-x['lat2 [arcsec]'][i+1])**2) for i in range(len(x['lon2 [arcsec]'])-1)]), axis=1)
+    df['length3 [arcsec]'] = df.apply(lambda x: np.array([np.sqrt((x['lon3 [arcsec]'][i]-x['lon3 [arcsec]'][i+1])**2 + (x['lat3 [arcsec]'][i]-x['lat3 [arcsec]'][i+1])**2) for i in range(len(x['lon3 [arcsec]'])-1)]), axis=1)
 
-    # gets the mean of the two arcade lengths for each row
-    df['length [arcsec]'] = df.apply(lambda x: np.mean([np.sum(x['length1 [arcsec]']), np.sum(x['length2 [arcsec]'])]), axis=1)
-    df['length std [arcsec]'] = df.apply(lambda x: np.std([np.sum(x['length1 [arcsec]']), np.sum(x['length2 [arcsec]'])]), axis=1)
-
-    # compute the arcade tilt, by fiting a line to the footpoints and getting the angle of the line
-    # for each row, fit a line to the footpoints and get the angle of the line
+    # compute the arcade tilt angle using GreatArc.angle
     df['tilt [deg]'] = np.nan
     # for i in range(len(df)):
     #     # get the footpoints
@@ -86,10 +88,10 @@ for f in files:
         for j in range(len(df['fp1'][i])):
             fp1= df['fp1'][i][j]
             fp2= df['fp2'][i][j]
-            Solve why long is shown like that ?
-            Also why arcs are not bended ?
             plt.scatter(fp1.lon.arcsec, fp1.lat.arcsec, color='r')
             plt.scatter(fp2.lon.arcsec, fp2.lat.arcsec, color='b')
+            fp3= df['fp3'][i][j]
+            plt.scatter(fp3.lon.arcsec, fp3.lat.arcsec, color='g')
             arc = GreatArc(fp1, fp2, points=20)
             arc_lon = arc.coordinates().lon.arcsec
             arc_lat = arc.coordinates().lat.arcsec
@@ -136,9 +138,11 @@ for f in files:
     plt.savefig(oimage)
     plt.close()    
 
-    # plot the mean and stddev (error bar) of arcade length vs date
+    # plot the arcade lengths of each group vs date
     plt.figure(figsize=(12,7))
-    plt.errorbar(df['date'], df['length [arcsec]'], yerr=df['length std [arcsec]'], fmt='o', label='measured')
+    plt.scatter(df['date'], df['length1 [arcsec]'].apply(np.sum), color='r', label='group 1')
+    plt.scatter(df['date'], df['length2 [arcsec]'].apply(np.sum) , color='b', label='group 2')
+    plt.scatter(df['date'], df['length3 [arcsec]'].apply(np.sum) , color='g', label='group 3')
     z = np.polyfit(dates_sec, df['length [arcsec]'], 1)
     p = np.poly1d(z)
     # Velocity from arcsec/date to km/s.
