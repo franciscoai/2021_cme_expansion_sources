@@ -14,7 +14,7 @@ import matplotlib.colors as colors
 import os
 
 class SelectImgPoints:
-    def __init__(self, fits_files, output_file,diff=False, coord_type='heliographic_stonyhurst', roi=None, overwrite=False): # heliographic_carrington or heliographic_stonyhurst
+    def __init__(self, fits_files, output_file,diff=False, coord_type='heliographic_stonyhurst', roi=None, overwrite=False, color_scl=None): # heliographic_carrington or heliographic_stonyhurst
         self.fits_files = fits_files
         self.output_file = output_file
         self.points = []
@@ -22,6 +22,7 @@ class SelectImgPoints:
         self.coord_type = coord_type
         self.roi = roi
         self.overwrite = overwrite
+        self.color_scl = color_scl
         # create odirectory if it does not exist
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         if os.path.isfile(self.output_file) and not self.overwrite:
@@ -57,8 +58,12 @@ class SelectImgPoints:
                     print(f'Warning: ROI box [arcsec] specified. Plotting only the portion of the image within the box {self.roi}')
                 m = np.mean(map.data)
                 sd = np.std(map.data)
+                if self.color_scl is None: 
+                    scl = 3
+                else:
+                    scl = self.color_scl 
                 # plots with white as max and black as min
-                map.plot(norm=colors.Normalize(vmin=m-3*sd, vmax=m+3*sd), cmap='gray', title=title)
+                map.plot(norm=colors.Normalize(vmin=m-scl*sd, vmax=m+scl*sd), cmap='gray', title=title)
                 # Allow the user to click on the image to select points
                 points = plt.ginput(n=-1, timeout=0)
                 # Convert the selected pixel values to Carrington coordinates using the WCS information in the .fits file and Sunpy built in functions

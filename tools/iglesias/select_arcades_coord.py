@@ -10,12 +10,14 @@ import numpy as np
 
 # Constants
 # Event to process
-id = 1
+id = 3
 overwrite = True # if True, the output file will be overwritten if it already exists
 # time difference of the differential images in seconds
-img_time_diff = 60.*40.
+img_time_diff = 60.*30.
 # minima cadence of the differential images in seconds, use None to keep all the images
 cadence = 60.*20.
+# Amount of sigmas to control image color scale range
+color_scl = 7
 # Path to the main .csv file
 csv= os.getcwd() + '/input_data/ar.csv'
 databse= '/gehme/data'
@@ -173,7 +175,7 @@ if type(roi) == str:
 else:
     roi = None
 # Create an instance of the SelectImgPoints that selects points on the images and saves them to a .csv file
-select_img_points = SelectImgPoints(fits_files, output_file, diff=True, roi=roi, overwrite=overwrite)
+select_img_points = SelectImgPoints(fits_files, output_file, diff=True, roi=roi, overwrite=overwrite, color_scl=color_scl)
 # Select points
 select_img_points.select_points()
 # Print the path of the output file
