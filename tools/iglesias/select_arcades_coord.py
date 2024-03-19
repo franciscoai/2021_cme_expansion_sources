@@ -10,14 +10,14 @@ import numpy as np
 
 # Constants
 # Event to process
-id = 3
+id = 6
 overwrite = True # if True, the output file will be overwritten if it already exists
 # time difference of the differential images in seconds
 img_time_diff = 60.*30.
 # minima cadence of the differential images in seconds, use None to keep all the images
 cadence = 60.*20.
 # Amount of sigmas to control image color scale range
-color_scl = 7
+color_scl = 5
 # Path to the main .csv file
 csv= os.getcwd() + '/input_data/ar.csv'
 databse= '/gehme/data'
