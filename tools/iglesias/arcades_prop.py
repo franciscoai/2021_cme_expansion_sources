@@ -50,12 +50,13 @@ for f in files:
     df['lat1 [arcsec]'] = df.apply(lambda x: x['lat [arcsec]'][:len(x['lat [arcsec]'])//2] if len(x['lat [arcsec]'])%2==0 else x['lat [arcsec]'][:len(x['lat [arcsec]'])//3], axis=1)
     df['lon2 [arcsec]'] = df.apply(lambda x: x['lon [arcsec]'][len(x['lon [arcsec]'])//2:] if len(x['lon [arcsec]'])%2==0 else x['lon [arcsec]'][len(x['lon [arcsec]'])//3:2*len(x['lon [arcsec]'])//3], axis=1)
     df['lat2 [arcsec]'] = df.apply(lambda x: x['lat [arcsec]'][len(x['lat [arcsec]'])//2:] if len(x['lat [arcsec]'])%2==0 else x['lat [arcsec]'][len(x['lat [arcsec]'])//3:2*len(x['lat [arcsec]'])//3], axis=1)
-    df['lon3 [arcsec]'] = df.apply(lambda x: x['lon [arcsec]'][2*len(x['lon [arcsec]'])//3:]*np.nan if len(x['lon [arcsec]'])%2==0 else x['lon [arcsec]'][2*len(x['lon [arcsec]'])//3:], axis=1)
-    df['lat3 [arcsec]'] = df.apply(lambda x: x['lat [arcsec]'][2*len(x['lat [arcsec]'])//3:]*np.nan if len(x['lat [arcsec]'])%2==0 else x['lat [arcsec]'][2*len(x['lat [arcsec]'])//3:], axis=1) 
+    df['lon3 [arcsec]'] = df.apply(lambda x: x['lon [arcsec]'][len(x['lon [arcsec]'])//2:]*np.nan if len(x['lon [arcsec]'])%2==0 else x['lon [arcsec]'][2*len(x['lon [arcsec]'])//3:], axis=1)
+    df['lat3 [arcsec]'] = df.apply(lambda x: x['lat [arcsec]'][len(x['lat [arcsec]'])//2:]*np.nan if len(x['lat [arcsec]'])%2==0 else x['lat [arcsec]'][2*len(x['lat [arcsec]'])//3:], axis=1) 
 
     # get sky coord
     df['fp1'] = df.apply(lambda x: [SkyCoord(x['lon1 [arcsec]'][i], x['lat1 [arcsec]'][i], unit='arcsec',frame="heliographic_stonyhurst", observer="earth",  obstime=x['date']) for i in range(len(x['lon1 [arcsec]']))], axis=1)
     df['fp2'] = df.apply(lambda x: [SkyCoord(x['lon2 [arcsec]'][i], x['lat2 [arcsec]'][i], unit='arcsec',frame="heliographic_stonyhurst", observer="earth",  obstime=x['date']) for i in range(len(x['lon2 [arcsec]']))], axis=1)
+    df['fp3'] = df.apply(lambda x: [SkyCoord(x['lon3 [arcsec]'][i], x['lat3 [arcsec]'][i], unit='arcsec',frame="heliographic_stonyhurst", observer="earth",  obstime=x['date']) for i in range(len(x['lon3 [arcsec]']))], axis=1)
 
     # for each row, calculate the great arc distance distance between each footpoint (arcade width) and saves it in an array in a new column
     df['width [arcsec]'] = df.apply(lambda x: np.array([float(GreatArc(x['fp1'][i], x['fp2'][i]).distances()[-1].value) for i in range(len(x['fp1']))]), axis=1)
@@ -64,17 +65,34 @@ for f in files:
     df['length1 [arcsec]'] = df.apply(lambda x: np.array([np.sqrt((x['lon1 [arcsec]'][i]-x['lon1 [arcsec]'][i+1])**2 + (x['lat1 [arcsec]'][i]-x['lat1 [arcsec]'][i+1])**2) for i in range(len(x['lon1 [arcsec]'])-1)]), axis=1)
     df['length2 [arcsec]'] = df.apply(lambda x: np.array([np.sqrt((x['lon2 [arcsec]'][i]-x['lon2 [arcsec]'][i+1])**2 + (x['lat2 [arcsec]'][i]-x['lat2 [arcsec]'][i+1])**2) for i in range(len(x['lon2 [arcsec]'])-1)]), axis=1)
     df['length3 [arcsec]'] = df.apply(lambda x: np.array([np.sqrt((x['lon3 [arcsec]'][i]-x['lon3 [arcsec]'][i+1])**2 + (x['lat3 [arcsec]'][i]-x['lat3 [arcsec]'][i+1])**2) for i in range(len(x['lon3 [arcsec]'])-1)]), axis=1)
+    # adds df['length3 [arcsec]'] to df['length2 [arcsec]'] where df['length3 [arcsec]'] is not nan, otherwise adds 0
+    df['length2+3 [arcsec]'] = df.apply(lambda x: np.array([x['length2 [arcsec]'][i] + x['length3 [arcsec]'][i] if not np.isnan(x['length3 [arcsec]'][i]) else x['length2 [arcsec]'][i] for i in range(len(x['length2 [arcsec]']))]), axis=1)
 
-    # compute the arcade tilt angle using GreatArc.angle
-    df['tilt [deg]'] = np.nan
-    # for i in range(len(df)):
-    #     # get the footpoints
-    #     fp1 = SkyCoord(df['lon1 [arcsec]'][i], df['lat1 [arcsec]'][i], unit='arcsec',frame="heliographic_carrington", observer="earth",  obstime=df['date'][i])
-    #     fp2 = SkyCoord(df['lon2 [arcsec]'][i], df['lat2 [arcsec]'][i], unit='arcsec',frame="heliographic_carrington", observer="earth",  obstime=df['date'][i])
-    #     # get the line that fits the footpoints
-    #     line = GreatArc(fp1, fp2)
-    #     # get the angle of the line
-    #     df['tilt [deg]'][i] = line.angle.deg
+    # compute the arcade tilt angle using the mean GreatArc of all pairs of footpoints
+    df['tilt mean [deg]'] = np.nan
+    df['tilt sd [deg]'] = np.nan
+    df['fp4'] = df.apply(lambda x: [SkyCoord(x['lon2 [arcsec]'][i], x['lat1 [arcsec]'][i], unit='arcsec',frame="heliographic_stonyhurst", observer="earth",  obstime=x['date']) for i in range(len(x['lon2 [arcsec]']))], axis=1)
+    for i in range(len(df)):
+        # get the great arc for each pair of footpoints
+        ctilt=[]
+        for j in range(len(df['fp1'][i])):
+            p0= df['fp1'][i][j]
+            p1= df['fp2'][i][j]
+            p2= df['fp4'][i][j]
+            a=GreatArc(p1, p2, points=3)
+            b=GreatArc(p0, p2, points=3)
+            c=GreatArc(p0, p1, points=3)
+            a_ang = float(a.inner_angles()[2].value)
+            b_ang = float(b.inner_angles()[2].value)
+            c_ang = float(c.inner_angles()[2].value)
+            pair_tilt = np.rad2deg(np.arccos((np.cos(a_ang) - np.cos(b_ang) * np.cos(c_ang)) / (np.sin(b_ang) * np.sin(c_ang))))
+            if df['lat2 [arcsec]'][i][j] > df['lat1 [arcsec]'][i][j]:
+                ctilt.append(pair_tilt+90)
+            else:
+                ctilt.append(-pair_tilt+90)
+        df['tilt mean [deg]'][i] = np.mean(ctilt)
+        df['tilt sd [deg]'][i] = np.std(ctilt)        
+
 
     ### PLOTS
 
@@ -88,9 +106,9 @@ for f in files:
         for j in range(len(df['fp1'][i])):
             fp1= df['fp1'][i][j]
             fp2= df['fp2'][i][j]
+            fp3= df['fp3'][i][j]
             plt.scatter(fp1.lon.arcsec, fp1.lat.arcsec, color='r')
             plt.scatter(fp2.lon.arcsec, fp2.lat.arcsec, color='b')
-            fp3= df['fp3'][i][j]
             plt.scatter(fp3.lon.arcsec, fp3.lat.arcsec, color='g')
             arc = GreatArc(fp1, fp2, points=20)
             arc_lon = arc.coordinates().lon.arcsec
@@ -128,7 +146,7 @@ for f in files:
     p = np.poly1d(z)
     # Velocity from arcsec/date to km/s.
     vel = z[0]*arcsec2km
-    plt.plot(df['date'], p(dates_sec), label=f'fitted: {vel:.2f} km/s')
+    plt.plot(df['date'], p(dates_sec), label=f'fitted: {vel:.2f} km/s', color='k')
     plt.xlabel('Date')
     plt.ylabel('Width [arcsec]')
     plt.title('Mean and stddev of arcade width vs date')
@@ -143,11 +161,13 @@ for f in files:
     plt.scatter(df['date'], df['length1 [arcsec]'].apply(np.sum), color='r', label='group 1')
     plt.scatter(df['date'], df['length2 [arcsec]'].apply(np.sum) , color='b', label='group 2')
     plt.scatter(df['date'], df['length3 [arcsec]'].apply(np.sum) , color='g', label='group 3')
-    z = np.polyfit(dates_sec, df['length [arcsec]'], 1)
+    plt.scatter(df['date'], df['length2+3 [arcsec]'].apply(np.sum) , color='k', label='group 2+3')
+    # fits a line to df['length2+3 [arcsec]'].
+    z = np.polyfit(dates_sec, df['length2+3 [arcsec]'].apply(np.sum), 1)
     p = np.poly1d(z)
     # Velocity from arcsec/date to km/s.
     vel = z[0]*arcsec2km
-    plt.plot(df['date'], p(dates_sec), label=f'fitted: {vel:.2f} km/s')
+    plt.plot(df['date'], p(dates_sec), label=f'fitted: {vel:.2f} km/s', color='k')
     plt.xlabel('Date')
     plt.ylabel('Length [arcsec]')
     plt.title('Mean and stddev of arcade length vs date')
@@ -159,10 +179,15 @@ for f in files:
 
     # plot the tilt angle vs date
     plt.figure(figsize=(12,7))
-    plt.scatter(df['date'], df['tilt [deg]'])
+    plt.errorbar(df['date'], df['tilt mean [deg]'], yerr=df['tilt sd [deg]'], fmt='o', label='measured')
+    # fits a line and shows the line full equation in the plot label, use sci notaiton
+    z = np.polyfit(dates_sec, df['tilt mean [deg]'], 1)
+    p = np.poly1d(z)
+    plt.plot(df['date'], p(dates_sec), label=f'vel [deg/s]: {z[0]:.2e}', color='k')
     plt.xlabel('Date')
     plt.ylabel('Tilt [deg]')
-    plt.title('Tilt angle vs date')
+    plt.title('Tilt angle vs date' + '\n Mean value: {:.3f} deg'.format(df['tilt mean [deg]'].mean()))
+    plt.legend()
     plt.xticks(rotation=45)
     oimage = os.path.join(odir_ev, f.split('/')[-1].replace('.csv', '_tilt_vs_date.png'))
     plt.savefig(oimage)
