@@ -14,7 +14,7 @@ import matplotlib.colors as colors
 import os
 
 class SelectImgPoints:
-    def __init__(self, fits_files, output_file,diff=False, coord_type='heliographic_stonyhurst', roi=None, overwrite=False, color_scl=None): # heliographic_carrington or heliographic_stonyhurst
+    def __init__(self, fits_files, output_file, diff=False, coord_type='heliographic_stonyhurst', roi=None, overwrite=False, color_scl=None): # heliographic_carrington or heliographic_stonyhurst
         self.fits_files = fits_files
         self.output_file = output_file
         self.points = []

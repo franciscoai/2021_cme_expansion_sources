@@ -35,7 +35,10 @@ for f in files:
     try:
         df['date'] = pd.to_datetime(df['file'], format='AIA%Y%m%d_%H%M%S_0193.fits')
     except:
-        df['date'] = pd.to_datetime(df['file'], format='%Y%m%d_%H%M%S_14euA.fts')    
+        try:
+            df['date'] = pd.to_datetime(df['file'], format='%Y%m%d_%H%M%S_14euA.fts')
+        except:
+            df['date'] = pd.to_datetime(df['file'], format='%Y%m%d_%H%M%S_14euB.fts')
     # delete rows with '[]' in colum 'lon [arcsec]'
     df = df[df['lon [arcsec]'] != '[]']
     # reset id to start from 0
