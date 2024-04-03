@@ -42,17 +42,20 @@ def correct_ang(iang, flip=0):
 
 # main
 local_path = os.getcwd()
-repo_path = os.path.dirname(os.path.dirname(local_path))
+repo_path = local_path # os.path.dirname(os.path.dirname(local_path))
 opath = repo_path + '/output_data/compare_all_prop'
 
 # filaments data (fil)
 fil_file = repo_path + '/output_data/filaments.csv'
 
 # GCS data (gcs)
-gcs_dir = '/media/sf_onedrive_utn/work/repository/cme_expansion/GCSs'
+gcs_dir = repo_path + '/GCSs'
 
 # Magnetic AR data (ar)
 ar_file = repo_path + '/input_data/ar.csv'
+
+#arcades prop
+arcades_file = repo_path + '/output_data/arcades/props/all_arcades_props.csv'
 
 # constants
 # dates and sources [gcs,fil,ar] to flip tilt angle signs if angle >80 deg
@@ -67,6 +70,10 @@ df_fil['date'] = pd.to_datetime(df_fil['date'], format='%Y-%m-%d %H:%M:%S')
 # reads ar
 df_ar = pd.read_csv(ar_file, header=0, delimiter=',')
 df_ar['ar_time_tilt'] = pd.to_datetime(df_ar['ar_time_tilt'], format='%Y/%m/%d %H:%M:%S')
+
+# reads arcades 
+df_arcades = pd.read_csv(arcades_file, header=0, delimiter=',')
+df_arcades['date'] = pd.to_datetime(df_arcades['date'], format='%Y-%m-%d %H:%M:%S')
 
 # reads only the gcs .sav files for the dates in fil
 gcs = []
@@ -131,6 +138,13 @@ for d in df_fil['date']:
             gcs_vs_ar_val.append([gcs_val[0], y2])
             gcs_times = np.concatenate((gcs_times, [i.to_pydatetime() for i in x2]), axis=None)
             gcs_val = np.concatenate((gcs_val, y2), axis=None)
+        #adds arcade mean titls
+        x3 = df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'date']
+        y3 = df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'tilt mean [deg]']
+        # subtracts 180 if y3 is larger than 90
+        y3 = np.array(y3).astype(float)
+        y3 = correct_ang(y3, flip=0)
+        plt.plot(x3, y3, 'ok', label='Arcades')
         ind = np.argsort(gcs_times)
         gcs_times = gcs_times[ind]
         gcs_val = gcs_val[ind]
