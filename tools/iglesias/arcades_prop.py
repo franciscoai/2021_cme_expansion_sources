@@ -30,6 +30,7 @@ arcsec2km = 725.27 # 1 arcsec = 725.27 km
 files = sorted([os.path.join(input_dir,f) for f in os.listdir(input_dir) if f.endswith('.csv')])
 print('Files found:', files)
 # process each file and save the output
+all_df = pd.DataFrame() # to save all the dataframes
 for f in files:
     df = pd.read_csv(f, header=0, delimiter=',')
     try:
@@ -120,21 +121,7 @@ for f in files:
         plt.gca().set_aspect('equal')
         plt.xlabel('Longitude [arcsec]')
         plt.ylabel('Latitude [arcsec]')
-        plt.title('Arcades footpoints')
-        # if i == 0:
-        #     all_lon_flatten = np.array([])
-        #     all_lat_flatten = np.array([])
-        #     for j in range(len(df)):
-        #         all_lon_flatten = np.append(all_lon_flatten, df['lon [arcsec]'][j])
-        #         all_lat_flatten = np.append(all_lat_flatten, df['lat [arcsec]'][j])
-        #     xlim = [np.min(all_lon_flatten), np.max(all_lon_flatten)]
-        #     ylim = [np.min(all_lat_flatten), np.max(all_lat_flatten)]
-        #     plt.xlim(xlim)
-        #     plt.ylim(ylim)
-        # else:
-        #     plt.xlim(xlim)
-        #     plt.ylim(ylim)
-        
+        plt.title('Arcades footpoints')       
         oimage = os.path.join(odir_ev, f.split('/')[-1].replace('.csv', '_footpoints'+str(i)+'.png'))
         plt.savefig(oimage)
         plt.close()
@@ -149,6 +136,10 @@ for f in files:
     p = np.poly1d(z)
     # Velocity from arcsec/date to km/s.
     vel = z[0]*arcsec2km
+    #saves fit results in pandas
+    df['width fit par0'] = [z[0] for i in range(len(df))]
+    df['width fit par1'] = [z[1] for i in range(len(df))]
+    df['width fit vel [km/s]'] = [vel for i in range(len(df))]
     plt.plot(df['date'], p(dates_sec), label=f'fitted: {vel:.2f} km/s', color='k')
     plt.xlabel('Date')
     plt.ylabel('Width [arcsec]')
@@ -170,6 +161,9 @@ for f in files:
     p = np.poly1d(z)
     # Velocity from arcsec/date to km/s.
     vel = z[0]*arcsec2km
+    df['length fit par0'] = [z[0] for i in range(len(df))]
+    df['length fit par1'] = [z[1] for i in range(len(df))]
+    df['length fit vel [km/s]'] = [vel for i in range(len(df))]
     plt.plot(df['date'], p(dates_sec), label=f'fitted: {vel:.2f} km/s', color='k')
     plt.xlabel('Date')
     plt.ylabel('Length [arcsec]')
@@ -186,6 +180,9 @@ for f in files:
     # fits a line and shows the line full equation in the plot label, use sci notaiton
     z = np.polyfit(dates_sec, df['tilt mean [deg]'], 1)
     p = np.poly1d(z)
+    df['tilt fit par0'] = [z[0] for i in range(len(df))]
+    df['tilt fit par1'] = [z[1] for i in range(len(df))]
+    df['tilt fit mean value [deg]'] = [p(dates_sec).mean() for i in range(len(df))]
     plt.plot(df['date'], p(dates_sec), label=f'vel [deg/s]: {z[0]:.2e}', color='k')
     plt.xlabel('Date')
     plt.ylabel('Tilt [deg]')
@@ -195,5 +192,12 @@ for f in files:
     oimage = os.path.join(odir_ev, f.split('/')[-1].replace('.csv', '_tilt_vs_date.png'))
     plt.savefig(oimage)
     plt.close()
+    #adds event id to df
+    df['event'] = float(f.split('/')[-1].replace('.csv', '').split('_')[1])
+    # appends to main df
+    all_df = all_df.append(df, ignore_index=True)
+
+# saves the main df in csv
+all_df.to_csv(os.path.join(odir, 'all_arcades_props.csv'))
 
 print('Done :-)')
