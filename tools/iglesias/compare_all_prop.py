@@ -37,7 +37,7 @@ def correct_ang(iang, flip=0):
     if flip == 1:
         ang[np.abs(ang) > 75] *= -1
     #ang[ang < 0] += 180
-    return ang
+    return np.abs(ang)
 
 
 # main
@@ -103,6 +103,7 @@ exit
 # tilt angles
 gcs_vs_ar_val = []
 gcs_vs_fil_all = []
+gcs_vs_arcades_all = []
 for d in df_fil['date']:
     d_str = d.strftime('%Y%m%d')
     if d_str in gcs_dates:
@@ -145,6 +146,7 @@ for d in df_fil['date']:
         y3 = np.array(y3).astype(float)
         y3 = correct_ang(y3, flip=0)
         plt.plot(x3, y3, 'ok', label='Arcades')
+        gcs_vs_arcades_all.append([gcs_val[0], y3[0]])
         ind = np.argsort(gcs_times)
         gcs_times = gcs_times[ind]
         gcs_val = gcs_val[ind]
@@ -163,12 +165,111 @@ for d in df_fil['date']:
 
 gcs_vs_fil_all = np.array(gcs_vs_fil_all)
 gcs_vs_ar_val = np.array(gcs_vs_ar_val)
+gcs_vs_arcades_all = np.array(gcs_vs_arcades_all)
 plt.scatter(gcs_vs_fil_all[:, 0], gcs_vs_fil_all[:, 1], color='b', label='gcs vs fil')
 plt.scatter(gcs_vs_ar_val[:, 0], gcs_vs_ar_val[:, 1], color='r', label='gcs vs ar')
+plt.scatter(gcs_vs_arcades_all[:, 0], gcs_vs_arcades_all[:, 1], color='g', label='gcs vs arcades')
 plt.ylabel('fil/ar [deg]')
 plt.xlabel('gcs [deg]')  
 plt.xlim([-90, 90])
 plt.ylim([-90, 90])
 plt.legend()
 plt.savefig(opath+'/scatter.png')
+plt.close()
+
+# plots df_ar['gcs_axial_vel'] vs df_arcades['width fit vel [km/s]'] for each date
+df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+all_x=[]
+all_y=[]
+for d in df_ar['datetimes']:
+    d_str = d.strftime('%Y%m%d')
+    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_axial_vel']))
+    if len(x) > 1:
+        x = np.nanmean(x)
+    x = float(x)
+    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
+    all_x.append(x)
+    all_y.append(y)
+plt.scatter(all_x, all_y)
+plt.xlabel('gcs_axial_vel [km/s]')
+plt.ylabel('arcade width fit vel [km/s]')
+plt.savefig(opath+'/gcs_axial_vel_vs_width_fit_vel.png')
+plt.close()
+
+# plots df_ar['gcs_radial_vel_at6'] vs df_arcades['width fit vel [km/s]'] for each date
+df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+all_x=[]
+all_y=[]
+for d in df_ar['datetimes']:
+    d_str = d.strftime('%Y%m%d')
+    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_radial_vel_at6']))
+    if len(x) > 1:
+        x = np.nanmean(x)
+    x = float(x)
+    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
+    all_x.append(x)
+    all_y.append(y)
+plt.scatter(all_x, all_y)
+plt.xlabel('gcs_radial_vel_at6 [km/s]')
+plt.ylabel('arcade width fit vel [km/s]')
+plt.savefig(opath+'/gcs_radial_vel_at6_vs_width_fit_vel.png')
+plt.close()
+
+# plots df_ar['gcs_radial_vel_at6'] vs df_arcades['length fit vel [km/s]'] for each date
+df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+all_x=[]
+all_y=[]
+for d in df_ar['datetimes']:
+    d_str = d.strftime('%Y%m%d')
+    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_radial_vel_at6']))
+    if len(x) > 1:
+        x = np.nanmean(x)
+    x = float(x)
+    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length fit vel [km/s]'])
+    all_x.append(x)
+    all_y.append(y)
+plt.scatter(all_x, all_y)
+plt.xlabel('gcs_radial_vel_at6 [km/s]')
+plt.ylabel('arcade length fit vel [km/s]')
+plt.savefig(opath+'/gcs_radial_vel_at6_vs_length_fit_vel.png')
+plt.close()
+
+# plots df_ar['gcs_lat_vel'] vs df_arcades['width fit vel [km/s]'] for each date
+df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+all_x=[]
+all_y=[]
+for d in df_ar['datetimes']:
+    d_str = d.strftime('%Y%m%d')
+    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_lat_vel']))
+    if len(x) > 1:
+        x = np.nanmean(x)
+    x = float(x)
+    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
+    all_x.append(x)
+    all_y.append(y)
+plt.scatter(all_x, all_y)
+plt.xlabel('gcs_lat_vel [km/s]')
+plt.ylabel('arcade width fit vel [km/s]')
+plt.savefig(opath+'/gcs_lat_vel_vs_width_fit_vel.png')
+plt.close()
+
+
+# plots df_ar['gcs_awl_awd_ratio'] vs df_arcades['width fit vel [km/s]'] for each date
+df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+all_x=[]
+all_y=[]
+for d in df_ar['datetimes']:
+    d_str = d.strftime('%Y%m%d')
+    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_awl_awd_ratio']))
+    if len(x) > 1:
+        x = np.nanmean(x)
+    x = float(x)
+    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]']) 
+    y /= np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length fit vel [km/s]'])
+    all_x.append(x)
+    all_y.append(y)
+plt.scatter(all_x, all_y)
+plt.xlabel('gcs_awl_awd_ratio')
+plt.ylabel('arcade width fit vel /length fit vel')
+plt.savefig(opath+'/gcs_awl_awd_ratio_vs_width_over_length_fit_vel.png')
 plt.close()
