@@ -123,6 +123,8 @@ list_rejected_cmes_id = None
 #por ejemplo si quiero quitar el evento 1
 #list_rejected_cmes_id = [0]
 
+#Mas colores en https://i.stack.imgur.com/nCk6u.jpg
+
 if plot_tilt:
     # tilt angles
     gcs_vs_ar_val = []
