@@ -39,6 +39,16 @@ def correct_ang(iang, flip=0):
     #ang[ang < 0] += 180
     return np.abs(ang)
 
+def drop_by_index(lista_original,indices_to_drop):
+    """
+    Esta funcion toma 2 listas, la lista que quiero filtrar. La lista de indices_to_drop contiene los indices de la primera que
+    quiero eliminar.
+    La salida es entonces la lista original sin lista_original[indices_to_drop]
+    """
+    if not indices_to_drop:
+        return lista_original
+    if indices_to_drop:
+        return [element for i, element in enumerate(lista_original) if i not in indices_to_drop]
 
 # main
 local_path = os.getcwd()
@@ -100,7 +110,18 @@ gcs_keys = bla.sgui.dtype.names  # all keys in sav files
 # plots
 os.makedirs(opath, exist_ok=True)
 
+# set requiered plots
 plot_tilt = False
+gcs_lat_axial_ratio_vs_length_over_width_fit_vel = True
+gcs_awl_awd_ratio_vs_length_width_fit_vel_ratio = True
+gcs_awl_vs_length_fit_vel = True
+gcs_awd_vs_width_fit_vel = True
+#lista de CMEs que no deben plotearse
+#poner el numero de ID
+#Si no queremos rechazar ninguna, poner --> None
+list_rejected_cmes_id = None 
+#por ejemplo si quiero quitar el evento 1
+#list_rejected_cmes_id = [0]
 
 if plot_tilt:
     # tilt angles
@@ -180,151 +201,224 @@ if plot_tilt:
     plt.savefig(opath+'/scatter.png')
     plt.close()
 
-# plots df_ar['gcs_axial_vel'] vs df_arcades['width fit vel [km/s]'] for each date
-df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
-all_x=[]
-all_y=[]
-for d in df_ar['datetimes']:
-    d_str = d.strftime('%Y%m%d')
-    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_axial_vel']))
-    if len(x) > 1:
-        x = np.nanmean(x)
-    x = float(x)
-    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
-    all_x.append(x)
-    all_y.append(y)
-plt.scatter(all_x, all_y)
-plt.xlabel('gcs_axial_vel [km/s]')
-plt.ylabel('arcade width fit vel [km/s]')
-plt.savefig(opath+'/gcs_axial_vel_vs_width_fit_vel.png')
-plt.close()
-
-# plots df_ar['gcs_radial_vel_at6'] vs df_arcades['width fit vel [km/s]'] for each date
-df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
-all_x=[]
-all_y=[]
-for d in df_ar['datetimes']:
-    d_str = d.strftime('%Y%m%d')
-    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_radial_vel_at6']))
-    if len(x) > 1:
-        x = np.nanmean(x)
-    x = float(x)
-    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
-    all_x.append(x)
-    all_y.append(y)
-plt.scatter(all_x, all_y)
-plt.xlabel('gcs_radial_vel_at6 [km/s]')
-plt.ylabel('arcade width fit vel [km/s]')
-plt.savefig(opath+'/gcs_radial_vel_at6_vs_width_fit_vel.png')
-plt.close()
-
-# plots df_ar['gcs_radial_vel_at6'] vs df_arcades['length fit vel [km/s]'] for each date
-df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
-all_x=[]
-all_y=[]
-for d in df_ar['datetimes']:
-    d_str = d.strftime('%Y%m%d')
-    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_radial_vel_at6']))
-    if len(x) > 1:
-        x = np.nanmean(x)
-    x = float(x)
-    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length fit vel [km/s]'])
-    all_x.append(x)
-    all_y.append(y)
-plt.scatter(all_x, all_y)
-plt.xlabel('gcs_radial_vel_at6 [km/s]')
-plt.ylabel('arcade length fit vel [km/s]')
-plt.savefig(opath+'/gcs_radial_vel_at6_vs_length_fit_vel.png')
-plt.close()
-
-# plots df_ar['gcs_lat_vel'] vs df_arcades['width fit vel [km/s]'] for each date
-df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
-all_x=[]
-all_y=[]
-for d in df_ar['datetimes']:
-    d_str = d.strftime('%Y%m%d')
-    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_lat_vel']))
-    if len(x) > 1:
-        x = np.nanmean(x)
-    x = float(x)
-    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
-    all_x.append(x)
-    all_y.append(y)
-plt.scatter(all_x, all_y)
-plt.xlabel('gcs_lat_vel [km/s]')
-plt.ylabel('arcade width fit vel [km/s]')
-plt.savefig(opath+'/gcs_lat_vel_vs_width_fit_vel.png')
-plt.close()
-
-
-# plots df_ar['gcs_awl_awd_ratio'] vs df_arcades['width fit vel [km/s]'] for each date
-df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
-all_x=[]
-all_y=[]
-for d in df_ar['datetimes']:
-    d_str = d.strftime('%Y%m%d')
-    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_awl_awd_ratio']))
-    if len(x) > 1:
-        x = np.nanmean(x)
-    x = float(x)
-    y = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]']) 
-    y /= np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length fit vel [km/s]'])
-    all_x.append(x)
-    all_y.append(y)
-plt.scatter(all_x, all_y)
-plt.xlabel('gcs_awl_awd_ratio')
-plt.ylabel('arcade width fit vel /length fit vel')
-plt.savefig(opath+'/gcs_awl_awd_ratio_vs_width_over_length_fit_vel.png')
-plt.close()
 
 #------------------------------------------------------------------------------------------------------
-# plots df_ar['gcs_awl_awd_ratio'] vs df_arcades['width fit vel [km/s]'] for each date
-df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
-all_x=[]
-all_y=[]
-colors = ['k','saddlebrown','brown','r','sandybrown','forestgreen','lime','g','c','b','mediumblue','midnightblue']
-labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
-for d in df_ar['datetimes']:
-    d_str = d.strftime('%Y%m%d')
-    x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_awl_awd_ratio']))
-    #x_gcs_awl = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_awl']))
-    #x_gcs_awd = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_awd']))
-    if len(x) > 1:
-        x = np.nanmean(x)
-    x = float(x)
-    y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length fit vel [km/s]'])
-    y /= np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]']) 
-    all_x.append(x)
-    all_y.append(y)
+# plots gcs lat vel / gcs axial vel VS length fit vel/ width fit vel
+# y vs x
+ajuste_lineal = True
+if gcs_lat_axial_ratio_vs_length_over_width_fit_vel:
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','forestgreen','lime','g','c','b','mediumblue','midnightblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for d in df_ar['datetimes']:
+        d_str = d.strftime('%Y%m%d')
 
+        x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_lat_vel']))
+        x /= np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_axial_vel']))
 
-#all_x_cleaned = [x for x in all_x if not np.isnan(x)] #usar un where
-#all_y_cleaned = [x for x in all_y if not np.isnan(x)]
-all_x = all_x [0:11]
-all_y = all_y [0:11]
+        if len(x) > 1:
+            x = np.nanmean(x)
+        x = float(x)
+        y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length fit vel [km/s]'])
+        y /= np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]']) 
+        all_x.append(x)
+        all_y.append(y)
 
-#pearson coef and p-value
-linear_regresion = scipy.stats.linregress(all_x, all_y)
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+    #breakpoint()
+    
+    #se filtran los eventos que queremos descartar
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value and linear regresion
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
 
-fig,ax = plt.subplots()
-ax.set_xlabel('gcs_awl_awd_ratio')
-ax.set_ylabel('arcade length fit vel /width fit vel')
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('gcs lat vel / gcs axial vel', fontsize=16)
+    ax.set_ylabel('arcade length fit vel /width fit vel', fontsize=16)
+    ax.set_title('Title', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
 
-for contador in range(11):
-    ax.scatter(all_x[contador],all_y[contador],c=colors[contador],label=labels[contador],alpha=0.9)
-ax.legend(loc="upper right", prop={'size': 8})
-#scatter = ax.scatter(all_x, all_y, c=colors[0:11])
-#legend1 = ax.legend(*scatter.legend_elements(),loc="upper left", title="Classes")
-#ax.add_artist(legend1)
-ax.grid(True)
-plt.savefig(opath+'/gcs_awl_awd_ratio_vs_length_over_width_fit_vel.png')
-plt.close()
+    if ajuste_lineal:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="upper right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(opath+'/gcs_lat_axial_ratio_vs_length_over_width_fit_vel.png')
+    plt.close()
 
+#------------------------------------------------------------------------------------------------------
+# plots gcs awl VS arcade length fit for each date
+if gcs_awl_vs_length_fit_vel:
+    ajuste_lineal1 = True
 
-breakpoint()
-#plt.scatter(all_x, all_y,c=colors[0:11])
-#plt.xlabel('gcs_awl_awd_ratio')
-#plt.ylabel('arcade length fit vel /width fit vel')
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','forestgreen','lime','g','c','b','mediumblue','midnightblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for d in df_ar['datetimes']:
+        d_str = d.strftime('%Y%m%d')
+        x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_awl']))
 
+        if len(x) > 1:
+            x = np.nanmean(x)
+        x = float(x)
 
+        y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length fit vel [km/s]'])
+        all_x.append(x)
+        all_y.append(y)
 
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('gcs awl', fontsize=16)
+    ax.set_ylabel('arcade length fit vel [km/s]', fontsize=16)
+    ax.set_title('Title', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal1:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="upper right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(opath+'/gcs_awl_vs_length_fit_vel.png')
+    plt.close()
+
+#------------------------------------------------------------------------------------------------------
+# plots gcs awd VS arcade width fit for each date
+if gcs_awd_vs_width_fit_vel:
+    ajuste_lineal2 = True
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','forestgreen','lime','g','c','b','mediumblue','midnightblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for d in df_ar['datetimes']:
+        d_str = d.strftime('%Y%m%d')
+        x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_awd']))
+
+        if len(x) > 1:
+            x = np.nanmean(x)
+        x = float(x)
+
+        y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
+        all_x.append(x)
+        all_y.append(y)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('gcs awd', fontsize=16)
+    ax.set_ylabel('arcade width fit vel [km/s]', fontsize=16)
+    ax.set_title('Title', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal2:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="upper right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(opath+'/gcs_awd_vs_width_fit_vel.png')
+    plt.close()
+
+#------------------------------------------------------------------------------------------------------
+# plots gcs awl /gcs awd VS arcade length / arcade width fit for each date
+if gcs_awl_awd_ratio_vs_length_width_fit_vel_ratio:
+    ajuste_lineal3 = True
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','forestgreen','lime','g','c','b','mediumblue','midnightblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for d in df_ar['datetimes']:
+        d_str = d.strftime('%Y%m%d')
+        x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_awl']))
+        x /= np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_awd']))
+        if len(x) > 1:
+            x = np.nanmean(x)
+        x = float(x)
+
+        y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length fit vel [km/s]'])
+        y /= np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
+        all_x.append(x)
+        all_y.append(y)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('gcs awl / gcs awd', fontsize=16)
+    ax.set_ylabel('arcade length fit vel / arcade width fit vel ', fontsize=16)
+    ax.set_title('Title', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal3:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="upper right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(opath+'/gcs_awl_awd_ratio_vs_length_width_fit_vel_ratio.png')
+    plt.close()
