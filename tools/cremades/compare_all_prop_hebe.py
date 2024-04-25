@@ -113,8 +113,8 @@ os.makedirs(opath, exist_ok=True)
 
 # set requiered plots
 plot_tilt = False
-gcs_lat_axial_ratio_vs_length_over_width_fit_vel = True
-gcs_awl_awd_ratio_vs_length_width_fit_vel_ratio = True
+pea_prop_speed_over_pea_sep_speed_vs_gcs_lat_vel_over_gcs_axial_vel = True
+pea_prop_sep_speed_ratio_vs_gcs_awl_awd_ratio = True
 pea_prop_speed_vs_gcs_awl = True
 pea_sep_speed_vs_gcs_awd = True
 #lista de CMEs que no deben plotearse
@@ -206,14 +206,14 @@ if plot_tilt:
 
 
 #------------------------------------------------------------------------------------------------------
-# plots gcs lat vel / gcs axial vel VS length fit vel/ width fit vel
+# plots PEA propagation speed/PEA separation speed VS. GCS lat vel / gcs axial vel  ---> Done Hebe
 # y vs x
 ajuste_lineal = True
-if gcs_lat_axial_ratio_vs_length_over_width_fit_vel:
+if pea_prop_speed_over_pea_sep_speed_vs_gcs_lat_vel_over_gcs_axial_vel:
     df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
     all_x=[]
     all_y=[]
-    colors = ['k','saddlebrown','brown','r','sandybrown','forestgreen','lime','g','c','b','mediumblue','midnightblue']
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
     labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
     for d in df_ar['datetimes']:
         d_str = d.strftime('%Y%m%d')
@@ -249,8 +249,8 @@ if gcs_lat_axial_ratio_vs_length_over_width_fit_vel:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('gcs lat vel / gcs axial vel', fontsize=16)
-    ax.set_ylabel('arcade length fit vel /width fit vel', fontsize=16)
+    ax.set_xlabel('GCS lateral (L) speed / GCS axial (D) speed', fontsize=16)
+    ax.set_ylabel('PEA prop. speed / PEA sep. speed', fontsize=16)
     ax.set_title('Title', fontsize=18)
     for contador in range(len(all_x_filtered)):
         ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
@@ -260,13 +260,13 @@ if gcs_lat_axial_ratio_vs_length_over_width_fit_vel:
         ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
     ax.legend(loc="upper right", prop={'size': 8})
     ax.grid(True)
-    plt.savefig(opath+'/gcs_lat_axial_ratio_vs_length_over_width_fit_vel.png')
+    plt.savefig(hpath+'/pea_prop_speed_over_pea_sep_speed_vs_gcs_lat_vel_over_gcs_axial_vel.png')
     plt.close()
 
 #------------------------------------------------------------------------------------------------------
-# plots PEA propagation speed vs. GCS AW_L for each date  -->being done by Hebe
+# plots PEA propagation speed vs. GCS AW_L for each date  --> Done Hebe
 if pea_prop_speed_vs_gcs_awl:
-    ajuste_lineal1 = True
+    ajuste_lineal1 = False
 
     df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
     all_x=[]
@@ -318,7 +318,7 @@ if pea_prop_speed_vs_gcs_awl:
     plt.close()
 
 #------------------------------------------------------------------------------------------------------
-# plots PEA separation speed vs. GCS AW_D for each date ---> listo hebe
+# plots PEA separation speed vs. GCS AW_D for each date ---> Done hebe
 if pea_sep_speed_vs_gcs_awd:
     ajuste_lineal2 = False
 
@@ -372,14 +372,14 @@ if pea_sep_speed_vs_gcs_awd:
     plt.close()
 
 #------------------------------------------------------------------------------------------------------
-# plots gcs awl /gcs awd VS arcade length / arcade width fit for each date
-if gcs_awl_awd_ratio_vs_length_width_fit_vel_ratio:
+# plots PEA propagation speed / PEA separation speed VS GCS AW_L vs. GCS AW_D for each date
+if pea_prop_sep_speed_ratio_vs_gcs_awl_awd_ratio:
     ajuste_lineal3 = True
 
     df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
     all_x=[]
     all_y=[]
-    colors = ['k','saddlebrown','brown','r','sandybrown','forestgreen','lime','g','c','b','mediumblue','midnightblue']
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
     labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
     for d in df_ar['datetimes']:
         d_str = d.strftime('%Y%m%d')
@@ -412,8 +412,8 @@ if gcs_awl_awd_ratio_vs_length_width_fit_vel_ratio:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('gcs awl / gcs awd', fontsize=16)
-    ax.set_ylabel('arcade length fit vel / arcade width fit vel ', fontsize=16)
+    ax.set_xlabel('GCS AW$_L$ / GCS AW$_D$', fontsize=14)
+    ax.set_ylabel('PEA prop. speed / PEA sep. speed ', fontsize=14)
     ax.set_title('Title', fontsize=18)
     for contador in range(len(all_x_filtered)):
         ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
@@ -423,5 +423,5 @@ if gcs_awl_awd_ratio_vs_length_width_fit_vel_ratio:
         ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
     ax.legend(loc="upper right", prop={'size': 8})
     ax.grid(True)
-    plt.savefig(opath+'/gcs_awl_awd_ratio_vs_length_width_fit_vel_ratio.png')
+    plt.savefig(hpath+'/pea_prop_sep_speed_ratio_vs_gcs_awl_awd_ratio')
     plt.close()
