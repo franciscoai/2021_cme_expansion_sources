@@ -54,6 +54,7 @@ def drop_by_index(lista_original,indices_to_drop):
 local_path = os.getcwd()
 repo_path = local_path # os.path.dirname(os.path.dirname(local_path))
 opath = repo_path + '/output_data/compare_all_prop'
+hpath = repo_path + '/output_data/compare_all_prop_hebe'
 
 # filaments data (fil)
 fil_file = repo_path + '/output_data/filaments.csv'
@@ -115,13 +116,13 @@ plot_tilt = False
 gcs_lat_axial_ratio_vs_length_over_width_fit_vel = True
 gcs_awl_awd_ratio_vs_length_width_fit_vel_ratio = True
 gcs_awl_vs_length_fit_vel = True
-gcs_awd_vs_width_fit_vel = True
+pea_sep_speed_vs_gcs_awd = True
 #lista de CMEs que no deben plotearse
 #poner el numero de ID
 #Si no queremos rechazar ninguna, poner --> None
 list_rejected_cmes_id = None 
 #por ejemplo si quiero quitar el evento 1
-#list_rejected_cmes_id = [0]
+list_rejected_cmes_id = [0]
 
 #Mas colores en https://i.stack.imgur.com/nCk6u.jpg
 
@@ -317,14 +318,14 @@ if gcs_awl_vs_length_fit_vel:
     plt.close()
 
 #------------------------------------------------------------------------------------------------------
-# plots gcs awd VS arcade width fit for each date
-if gcs_awd_vs_width_fit_vel:
-    ajuste_lineal2 = True
+# plots gcs awd VS arcade width fit for each date ---> listo hebe
+if pea_sep_speed_vs_gcs_awd:
+    ajuste_lineal2 = False
 
     df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
     all_x=[]
     all_y=[]
-    colors = ['k','saddlebrown','brown','r','sandybrown','forestgreen','lime','g','c','b','mediumblue','midnightblue']
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
     labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
     for d in df_ar['datetimes']:
         d_str = d.strftime('%Y%m%d')
@@ -356,18 +357,18 @@ if gcs_awd_vs_width_fit_vel:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('gcs awd', fontsize=16)
-    ax.set_ylabel('arcade width fit vel [km/s]', fontsize=16)
-    ax.set_title('Title', fontsize=18)
+    ax.set_xlabel('GCS AW$_D$', fontsize=14)
+    ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
+    ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):
         ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
 
     if ajuste_lineal2:
         x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
         ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
-    ax.legend(loc="upper right", prop={'size': 8})
+    ax.legend(loc="lower right", prop={'size': 8})
     ax.grid(True)
-    plt.savefig(opath+'/gcs_awd_vs_width_fit_vel.png')
+    plt.savefig(hpath+'/pea_sep_speed_vs_gcs_awd.png')
     plt.close()
 
 #------------------------------------------------------------------------------------------------------
