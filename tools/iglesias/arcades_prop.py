@@ -5,6 +5,12 @@ Computes length [km], vel of expansion and tilt angle [deg] from several arcades
 Writes a new table
 
 @author: iglesias
+
+Output fields:
+
+LengthX are the lengths of the consecutive segments formed by each group of selected points (the sum is the total len)
+
+
 """
 from turtle import color
 import numpy as np

@@ -146,7 +146,23 @@ function paper_plots_setHeight , p
 end 
 
 pro  exp_paper_plots
-@gcs_config
+
+;;
+
+;Path to the dir containing /sdo ,/soho and /stereo data directories as well as the /Polar_Observations dir.
+DATA_PATH='/gehme/data'
+;Path with our GCS data directories
+GCSD_PATH='/gehme/projects/2021_cme_expansion_sources/repo_hebe/2021_cme_expansion_sources/GCSs'
+; LASCO proc images Path
+LASCO_PATH=DATA_PATH+'/soho/lasco/level_1/c2'
+;Linux File premissions and format
+CHMOD_DIR='775'o              ; Permissions of the output directories
+CHMOD_FILE='664'o             ; Permissions of the output files
+NEWLINE=string([13B])         ; New line charachter
+
+;;;
+
+
 common paper_plots_func2fit_block, HINI, WINI
 common paper_plots_func2fit_block2, SETAW,pr
 
@@ -315,8 +331,8 @@ for j=0, nd-1 do begin
   oplot, xx, paper_plots_func2fit4(xx1,[fit_ht[3*j:3*j+2]]),linestyle=LINE[j],color=COLORS[j] 
 endfor
 oplot, [-1,6], replicate(HINI, 2),linestyle=1,color=COLORS[0] 
-legend,file_basename(DIR1) ,psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS,position=[6.2,4.0],$
-  spacing=1, pspacing=2
+;;legend,file_basename(DIR1) ,psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS,position=[6.2,4.0],$
+;  spacing=1, pspacing=2
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -344,7 +360,7 @@ for j=0, nd-1 do begin
  endelse
 endfor
 ;adds the exp fit 
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE, /right,charsize=0.8,color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE, /right,charsize=0.8,color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -371,7 +387,7 @@ SET_PLOT, mydevice
 ;   oplot, d[j].hgt[0:d[j].np-1], awdiff[0:d[j].np-1,j], psym=SYM[j], linestyle=LINE[j], thick=1.2, color=COLORS[j];,/ylog
 ;  endelse
 ; endfor
-; legend,file_basename(DIR1),psym=SYM, linestyle=LINE, /right,charsize=0.8,color=COLORS
+; ;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE, /right,charsize=0.8,color=COLORS
 ; ; Close the PostScript file:
 ; DEVICE, /CLOSE
 ; SET_PLOT, mydevice
@@ -416,7 +432,7 @@ errawl=0
 errawl=[errawl,mean((d[j].eawl_h[0:d[j].np-1]-d[j].eawl_l[0:d[j].np-1])),y[d[j].np-1]]
 endfor
 ;print, fit;, chi
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -462,7 +478,7 @@ errawd=0
  ;stop ; CHECK THAT THE TIME-DEPENDENT ERROR
 endfor
 ;print, fit_awdh;, chi
-;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -498,8 +514,34 @@ for j=0, nd-1 do begin
         +'$\pm$'+string(eawd,format=TMFT)+' & '+string(awl,format=TMFT) $
         +'$\pm$'+string(eawl,format=TMFT)+'\\'
 endfor
-;
-;
+
+print,"********************TABLE DATA 2Rs************************"
+TMFT="(I8)"
+for j=0, nd-1 do begin
+  t2=root_paper_plots_func2fit4(2., fit_ht[3*j:3*j+2]) ; time at 2 Rs
+  ;print,fit_ht[3*j:3*j+2]
+  ;print, t6
+  vel=deriv_paper_plots_func2fit4(t2,fit_ht[3*j:3*j+2]) * RS2KM / 3600. ; vel at 2 Rs in km/s
+  acc=scnd_deriv_paper_plots_func2fit4(fit_ht[3*j:3*j+2]) * RS2KM * 1000. / 3600.^2.; mean acc m/s^2.
+  date=d[j].date[0] ; date of first point
+  lat=d[j].lat[total(finite(d[j].lat[*]))-1]*!RADEG
+  lon=d[j].lon[total(finite(d[j].lon[*]))-1]*!RADEG-tim2carr(d[j].date[total(finite(d[j].lat[*]))-1])
+  awd=errawd[0:*:2]
+  awd=awd[j+1]
+  eawd=errawd[1:*:2]
+  eawd=eawd[j]
+  awl=errawl[0:*:2]
+  awl=awl[j+1]
+  eawl=errawl[1:*:2]
+  eawl=eawl[j] 
+  print, strmid(date,0,19)+' & '+string(lat,format=TMFT) $
+        +' & '+string(lon,format=TMFT)+' & '+string(vel,format=TMFT) $
+        +' & '+string(acc,format=TMFT)+' & '+string(awd,format=TMFT) $
+        +'$\pm$'+string(eawd,format=TMFT)+' & '+string(awl,format=TMFT) $
+        +'$\pm$'+string(eawl,format=TMFT)+'\\'
+endfor
+
+stop
 ;
 ;
 ;
@@ -536,7 +578,7 @@ toplotyy=paper_plots_func2fit_deriv_norm(toplotxx,[fit_awdh[3*j:3*j+2]])
  endelse
 endfor
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -598,7 +640,7 @@ ind=where(~finite(allm))
 ;allm=smooth(allm,10,/nan)
 ;allm[ind]=!values.f_nan
 oplot, allx, allm, psym=0, linestyle=0, thick=9, color=0;,/ylog 
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -659,7 +701,7 @@ ind=where(~finite(allm))
 ;allm=smooth(allm,10,/nan)
 ;allm[ind]=!values.f_nan
 oplot, allx, allm, psym=0, linestyle=0, thick=9, color=0;,/ylog 
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS,position=[5,37]
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS,position=[5,37]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -695,7 +737,7 @@ toplotyy=paper_plots_func2fit_deriv_norm(toplotxx,[fit_awlh[3*j:3*j+2]])
  endelse
 endfor
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -739,7 +781,7 @@ xx = indgen(150)*0.1
  oplot, xx, paper_plots_func2fit(xx,[fit_awdt[3*j:3*j+2]]),linestyle=LINE[j],color=COLORS[j] ;, psym=SYM[j], linestyle=LINE[j], thick=1.2, color=COLORS[j];,/ylog
 endfor
 ;print, fit_awdh;, chi
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -783,7 +825,7 @@ xx = indgen(150)*0.1
  oplot, xx, paper_plots_func2fit(xx,[fit_awlt[3*j:3*j+2]]),linestyle=LINE[j],color=COLORS[j] ;, psym=SYM[j], linestyle=LINE[j], thick=1.2, color=COLORS[j];,/ylog
 endfor
 ;print, fit_awdh;, chi
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -824,7 +866,7 @@ toplotyy=paper_plots_func2fit_deriv(xx,[fit_awdt[3*j:3*j+2]])
  endelse
 endfor
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS, position=[6,400]
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS, position=[6,400]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -865,7 +907,7 @@ toplotyy=paper_plots_func2fit_deriv(xx,[fit_awlt[3*j:3*j+2]])
  endelse
 endfor
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS, position=[6,400]
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS, position=[6,400]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -895,7 +937,7 @@ plot, x, y, psym=5, linestyle=0,title= 'Final angular widths vs radial accelerat
       font=FONT, YMARGIN=MARGIN, XMARGIN=XXMARGIN, charthick=1.6, thick=1.2, color=COLORS[0], xrange=[min(x,/nan),max(x,/nan)];,/ylog
 oplot, x, y1, psym=2, linestyle=0, thick=1.2, color=COLORS[3];,/ylog
 ;SYM=-SYM
-legend,['Final AWD','Final AWL'],psym=[5,2], linestyle=[0,0],charsize=0.8, color=[COLORS[0],COLORS[3]]
+;;legend,['Final AWD','Final AWL'],psym=[5,2], linestyle=[0,0],charsize=0.8, color=[COLORS[0],COLORS[3]]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -927,7 +969,7 @@ plot, x, y, psym=5, linestyle=0,title= 'Settling heights vs radial acceleration 
       font=FONT, YMARGIN=MARGIN, XMARGIN=XXMARGIN, charthick=1.6, thick=1.2, color=COLORS[0], xrange=[min(x,/nan),max(x,/nan)];,/ylog
 oplot, x, y1, psym=2, linestyle=0, thick=1.2, color=COLORS[3];,/ylog
 ;SYM=-SYM
-legend,['AWD','AWL'],psym=[5,2], linestyle=[0,0],charsize=0.8, color=[COLORS[0],COLORS[3]]
+;;legend,['AWD','AWL'],psym=[5,2], linestyle=[0,0],charsize=0.8, color=[COLORS[0],COLORS[3]]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -963,7 +1005,7 @@ plot, x, y, psym=5, linestyle=0,title= 'Settling heights vs final angular widths
         xrange=[min([x,x1],/nan),max([x,x1],/nan)];,/ylog,/xlog
 oplot, x1, y1, psym=2, linestyle=0, thick=1.2, color=COLORS[3]
 ;SYM=-SYM
-legend,['AWD','AWL'],psym=[5,2], linestyle=[0,0],charsize=0.8, color=[COLORS[0],COLORS[3]]
+;;legend,['AWD','AWL'],psym=[5,2], linestyle=[0,0],charsize=0.8, color=[COLORS[0],COLORS[3]]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -999,7 +1041,7 @@ plot, [0,0], [0,0], psym=-1, linestyle=0,title= 'Settling height for all events'
         xrange=[2,6];,/ylog,/xlog
 for j=0, nd-1 do oplot, [0,y[j]], [0,x[j]], psym=-SYM[j],color=COLORS[j], thick=5,symsize=1.4
 oplot,[2,6],[2,6],linestyle=0
-legend,file_basename(DIR1),psym=-SYM,charsize=1.2,color=COLORS, thick=5, position=[5,4.3]
+;;legend,file_basename(DIR1),psym=-SYM,charsize=1.2,color=COLORS, thick=5, position=[5,4.3]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1030,7 +1072,7 @@ plot, [0,0], [0,0], psym=-1, linestyle=0,title= 'Final AW for all events', $
 for j=0, nd-1 do oplot, [0,x[j]], [0,x1[j]], psym=-SYM[j],color=COLORS[j], thick=5,symsize=1.4
 oplot,[0,160],[0,160],linestyle=0
 oplot,[0,80],[0,160],linestyle=0
-legend,file_basename(DIR1),psym=-SYM,charsize=1.2,color=COLORS, thick=5, position=[31,140]
+;;legend,file_basename(DIR1),psym=-SYM,charsize=1.2,color=COLORS, thick=5, position=[31,140]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1087,7 +1129,7 @@ SET_PLOT, mydevice
 ;  oplot, x, y1, psym=-SYM[1], linestyle=LINE[j], thick=1.2, color=COLORS[j];,/ylog
 ;  oplot, xx, paper_plots_func2fit(xx,fit),linestyle=LINE[0] ;, psym=SYM[j], linestyle=LINE[j], thick=1.2, color=COLORS[j];,/ylog
 ;  bla1=strtrim(fit[0],2)+' ; '+strtrim(fit[1],2)+' ; '+strtrim(fit[2],2)
-;  legend,['AWL:'+bla, 'AWD:'+bla1], psym=SYM[0:1], linestyle=LINE[0:1],charsize=0.8
+;  ;;legend,['AWL:'+bla, 'AWD:'+bla1], psym=SYM[0:1], linestyle=LINE[0:1],charsize=0.8
 ;  DEVICE, /CLOSE
 ;  SET_PLOT, mydevice
 ; endfor
@@ -1129,7 +1171,7 @@ for j=0, nd-1 do begin
  endelse
   oplot, xx, paper_plots_func2fit5(xx,[fit_wlt[3*j:3*j+2]]),linestyle=LINE[j],color=COLORS[j] 
 endfor
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8,color=COLORS;,position=[5,3.5]
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8,color=COLORS;,position=[5,3.5]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1170,7 +1212,7 @@ for j=0, nd-1 do begin
  endelse
   oplot, xx, paper_plots_func2fit5(xx,[fit_wdt[3*j:3*j+2]]),linestyle=LINE[j],color=COLORS[j] 
 endfor
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8,color=COLORS;,position=[5,3.5]
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8,color=COLORS;,position=[5,3.5]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1216,8 +1258,8 @@ endfor
 xx=indgen(50)*(max(toplotx,/nan)-min(toplotx,/nan))/50+min(toplotx,/nan)
 oplot, xx,fit[0]+fit[1]*xx, thick=7;,/ylog
 ;SYM=-SYM
-legend,[file_basename(DIR1),'FIT m = '+strtrim(fit[1],2)+'; rms_err='+strtrim(chisqr,2)],psym=[SYM,0], $
-  linestyle=[LINE,0], /left,charsize=0.8,color=[COLORS,COLORS[1]]
+;;legend,[file_basename(DIR1),'FIT m = '+strtrim(fit[1],2)+'; rms_err='+strtrim(chisqr,2)],psym=[SYM,0], $
+ ; linestyle=[LINE,0], /left,charsize=0.8,color=[COLORS,COLORS[1]]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1282,8 +1324,8 @@ oplot, mxx, allm, psym=0, linestyle=0, thick=9, color=0;,/ylog
 ;oplot, mxx, allm-allsd, psym=0, linestyle=1, thick=9, color=0;,/ylog 
 print, strtrim(mean(allm,/nan)) + '+-' + strtrim(mean(allsd,/nan))
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM,/fill, linestyle=LINE,charsize=0.8, color=COLORS,$
-  position=[5,3.95], spacing=1
+;;legend,file_basename(DIR1),psym=SYM,/fill, linestyle=LINE,charsize=0.8, color=COLORS,$
+;  position=[5,3.95], spacing=1
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1314,7 +1356,7 @@ for j=0, nd-1 do begin
  endelse
 endfor
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1346,7 +1388,7 @@ for j=0, nd-1 do begin
  endelse
 endfor
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1378,7 +1420,7 @@ for j=0, nd-1 do begin
  endelse
 endfor
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1421,7 +1463,7 @@ toplotyy=paper_plots_func2fit2_deriv(xx-tini[j],[fit_wlt[3*j:3*j+2]])*RS2KM/3600
 endfor
 
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1493,7 +1535,7 @@ ind=where(~finite(allm))
 ;allm[ind]=!values.f_nan
 oplot, allx, allm, psym=0, linestyle=0, thick=9, color=0;,/ylog 
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS,position=[4.5,2.7]
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS,position=[4.5,2.7]
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1535,7 +1577,7 @@ print, 'DWD at 6 Rs',paper_plots_func2fit2_deriv(t6-tini[j],[fit_wdt[3*j:3*j+2]]
  endelse
 endfor
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1581,7 +1623,7 @@ print, 'DWL at 6 Rs',paper_plots_func2fit2_deriv(t6-tini[j],[fit_wlt[3*j:3*j+2]]
 endfor
 
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1622,7 +1664,7 @@ toplotyy=paper_plots_func2fit2_deriv(xx-tini[j],[fit_wdt[3*j:3*j+2]])*RS2KM/3600
  endelse
 endfor
 ;SYM=-SYM
-legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1695,9 +1737,9 @@ ind=where(~finite(allm))
 ;allm=smooth(allm,10,/nan)
 ;allm[ind]=!values.f_nan
 oplot, allx, allm, psym=0, linestyle=0, thick=9, color=0;,/ylog 
-;legend,file_basename(DIR1),psym=[SYM], $
+;;;legend,file_basename(DIR1),psym=[SYM], $
 ;  linestyle=[LINE], /left,charsize=0.8,color=[COLORS];,position=[2,2.45]
-;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice
@@ -1744,9 +1786,9 @@ toplotyy=paper_plots_func2fit2_deriv(xx,[fit_wlt[3*j:3*j+2]])*RS2KM/3600.
 endfor
 xx=indgen(100)*15
 oplot, xx,mPol / mPod*xx, thick=7;,/ylog
-legend,[file_basename(DIR1),'Slope = '+strtrim(mPol / mPod,2)],psym=[SYM,0], $
-  linestyle=[LINE,0], /left,charsize=0.8,color=[COLORS,COLORS[1]]
-;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
+;;legend,[file_basename(DIR1),'Slope = '+strtrim(mPol / mPod,2)],psym=[SYM,0], $
+;  linestyle=[LINE,0], /left,charsize=0.8,color=[COLORS,COLORS[1]]
+;;;legend,file_basename(DIR1),psym=SYM, linestyle=LINE,charsize=0.8, color=COLORS
 ; Close the PostScript file:
 DEVICE, /CLOSE
 SET_PLOT, mydevice

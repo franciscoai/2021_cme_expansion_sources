@@ -466,7 +466,7 @@ if pea_sep_speed_vs_gcs_awd:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('GCS AW$_D$ -nuevo', fontsize=14)
+    ax.set_xlabel('GCS AW$_D$', fontsize=14)
     ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
     ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):
@@ -479,6 +479,457 @@ if pea_sep_speed_vs_gcs_awd:
     ax.grid(True)
     plt.savefig(hpath+'/pea_sep_speed_vs_gcs_awd.png')
     plt.close()
+
+#------------------------------------------------------------------------------------------------------
+# plots mean lenght vs. GCS AW_D for each date ---> Done hebe
+if pea_sep_speed_vs_gcs_awd:
+    ajuste_lineal2 = False
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for id in df_ar['ID']:
+        d_str = d.strftime('%Y%m%d')
+        d = [i for i in df_ar.loc[df_ar['ID'] == id, 'datetimes']][0]
+        x = np.array((df_ar.loc[df_ar['ID'] == id, 'gcs_awd']))
+        x = float(x)
+        y = [i for i in df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length2 [arcsec]']]
+        if len(y) > 0:
+            total_y = 0
+            for i in y:
+                total_y += np.sum([float(j) for j in str.split(str.split(str.split(i,'[')[1],']')[0])])
+            total_y /= len(y)
+            all_x.append(x)
+            all_y.append(total_y)
+        else:
+            print('Warning, could not find length1 for case ' + d_str)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('GCS AW$_D$', fontsize=14)
+    ax.set_ylabel('PEA mean length [acsec]', fontsize=14)
+    ax.set_title('', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal2:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="lower right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(hpath+'/pea_mean_length_vs_gcs_awd.png')
+    plt.close()
+
+#------------------------------------------------------------------------------------------------------
+# plots mean lenght vs. GCS AW_D for each date ---> Done hebe
+if pea_sep_speed_vs_gcs_awd:
+    ajuste_lineal2 = False
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for id in df_ar['ID']:
+        d_str = d.strftime('%Y%m%d')
+        d = [i for i in df_ar.loc[df_ar['ID'] == id, 'datetimes']][0]
+        x = np.array((df_ar.loc[df_ar['ID'] == id, 'gcs_awd']))
+        x = float(x)
+        y = [i for i in df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width [arcsec]']]
+        if len(y) > 0:
+            total_y = 0
+            for i in y:
+                total_y += np.mean([float(j) for j in str.split(str.split(str.split(i,'[')[1],']')[0])])
+            total_y /= len(y)
+            all_x.append(x)
+            all_y.append(total_y)
+        else:
+            print('Warning, could not find length1 for case ' + d_str)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('GCS AW$_D$', fontsize=14)
+    ax.set_ylabel('PEA mean width [acsec]', fontsize=14)
+    ax.set_title('', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal2:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="lower right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(hpath+'/pea_mean_width_vs_gcs_awd.png')
+    plt.close()
+#------------------------------------------------------------------------------------------------------
+# plots mean lenght vs. GCS AW_D for each date ---> Done hebe
+if pea_sep_speed_vs_gcs_awd:
+    ajuste_lineal2 = False
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for id in df_ar['ID']:
+        d_str = d.strftime('%Y%m%d')
+        d = [i for i in df_ar.loc[df_ar['ID'] == id, 'datetimes']][0]
+        x = np.array((df_ar.loc[df_ar['ID'] == id, 'gcs_radial_vel_at6']))
+        x = float(x)
+        y = [i for i in df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width [arcsec]']]
+        if len(y) > 0:
+            total_y = 0
+            for i in y:
+                total_y += np.mean([float(j) for j in str.split(str.split(str.split(i,'[')[1],']')[0])])
+            total_y /= len(y)
+            all_x.append(x)
+            all_y.append(total_y)
+        else:
+            print('Warning, could not find length1 for case ' + d_str)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('gcs_radial_vel_at6 [km/s]', fontsize=14)
+    ax.set_ylabel('PEA mean width [acsec]', fontsize=14)
+    ax.set_title('', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal2:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="best", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(hpath+'/pea_mean_width_vs_gcs_radial_vel_at6.png')
+    plt.close()
+    
+    #------------------------------------------------------------------------------------------------------
+# plots mean lenght vs. GCS AW_D for each date ---> Done hebe
+if pea_sep_speed_vs_gcs_awd:
+    ajuste_lineal2 = False
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for id in df_ar['ID']:
+        d_str = d.strftime('%Y%m%d')
+        d = [i for i in df_ar.loc[df_ar['ID'] == id, 'datetimes']][0]
+        x = np.array((df_ar.loc[df_ar['ID'] == id, 'gcs_radial_vel_at2']))
+        x = float(x)
+        y = [i for i in df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width [arcsec]']]
+        if len(y) > 0:
+            total_y = 0
+            for i in y:
+                total_y += np.mean([float(j) for j in str.split(str.split(str.split(i,'[')[1],']')[0])])
+            total_y /= len(y)
+            all_x.append(x)
+            all_y.append(total_y)
+        else:
+            print('Warning, could not find length1 for case ' + d_str)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('gcs_radial_vel_at2 [mk/s]', fontsize=14)
+    ax.set_ylabel('PEA mean width [acsec]', fontsize=14)
+    ax.set_title('', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal2:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="best", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(hpath+'/pea_mean_width_vs_gcs_radial_vel_at2.png')
+    plt.close()
+
+#------------------------------------------------------------------------------------------------------
+# plots mean lenght vs. GCS AW_D for each date ---> Done hebe
+if pea_sep_speed_vs_gcs_awd:
+    ajuste_lineal2 = False
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for id in df_ar['ID']:
+        d_str = d.strftime('%Y%m%d')
+        d = [i for i in df_ar.loc[df_ar['ID'] == id, 'datetimes']][0]
+        x = np.array((df_ar.loc[df_ar['ID'] == id, 'gcs_awl']))
+        x = float(x)
+        y = [i for i in df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'length2 [arcsec]']]
+        if len(y) > 0:
+            total_y = 0
+            for i in y:
+                total_y += np.sum([float(j) for j in str.split(str.split(str.split(i,'[')[1],']')[0])])
+            total_y /= len(y)
+            all_x.append(x)
+            all_y.append(total_y)
+        else:
+            print('Warning, could not find length1 for case ' + d_str)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('GCS AW$_L$', fontsize=14)
+    ax.set_ylabel('PEA mean length [acsec]', fontsize=14)
+    ax.set_title('', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal2:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="lower right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(hpath+'/pea_mean_length_vs_gcs_awl.png')
+    plt.close()
+
+#------------------------------------------------------------------------------------------------------
+# plots PEA separation speed vs. GCS radial  (d) speed for each date ---> Done hebe
+if pea_sep_speed_vs_gcs_axial_speed:
+    ajuste_lineal2 = False
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for d in df_ar['datetimes']:
+        d_str = d.strftime('%Y%m%d')
+        x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_radial_vel_at6']))
+
+        if len(x) > 1:
+            x = np.nanmean(x)
+        x = float(x)
+
+        y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
+        all_x.append(x)
+        all_y.append(y)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('gcs_radial_vel_at6 [km s$^{-1}$]', fontsize=14)
+    ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
+    ax.set_title('', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal2:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="lower right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(hpath+'/pea_sep_speed_vs_gcs_radial_vel_at6.png')
+    plt.close()
+
+#------------------------------------------------------------------------------------------------------
+# plots PEA separation speed vs. GCS radial  (d) speed for each date ---> Done hebe
+if pea_sep_speed_vs_gcs_axial_speed:
+    ajuste_lineal2 = False
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for d in df_ar['datetimes']:
+        d_str = d.strftime('%Y%m%d')
+        x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_radial_vel_at2']))
+
+        if len(x) > 1:
+            x = np.nanmean(x)
+        x = float(x)
+
+        y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
+        all_x.append(x)
+        all_y.append(y)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('gcs_radial_vel_at2 [km s$^{-1}$]', fontsize=14)
+    ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
+    ax.set_title('', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal2:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="lower right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(hpath+'/pea_sep_speed_vs_gcs_radial_vel_at2.png')
+    plt.close()
+#------------------------------------------------------------------------------------------------------
+# plots PEA separation speed vs. GCS radial  (d) speed for each date ---> Done hebe
+if pea_sep_speed_vs_gcs_axial_speed:
+    ajuste_lineal2 = False
+
+    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+    all_x=[]
+    all_y=[]
+    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
+    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+    for d in df_ar['datetimes']:
+        d_str = d.strftime('%Y%m%d')
+        x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_mean_acc1to6']))
+
+        if len(x) > 1:
+            x = np.nanmean(x)
+        x = float(x)
+
+        y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])
+        all_x.append(x)
+        all_y.append(y)
+
+    all_x = all_x [0:11]
+    all_y = all_y [0:11]
+
+    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+    #pearson coef and p-value
+    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+    slope = linear_regresion.slope
+    intercept = linear_regresion.intercept
+    pearson = linear_regresion.rvalue
+    r_square = pearson*pearson
+    p_value = linear_regresion.pvalue
+    stdev = linear_regresion.stderr
+
+    fig,ax = plt.subplots()
+    #ejes y titulo
+    ax.set_xlabel('gcs_mean_acc1to6 [m s$^{-2}$]', fontsize=14)
+    ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
+    ax.set_title('', fontsize=18)
+    for contador in range(len(all_x_filtered)):
+        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+
+    if ajuste_lineal2:
+        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+    ax.legend(loc="lower right", prop={'size': 8})
+    ax.grid(True)
+    plt.savefig(hpath+'/pea_sep_speed_vs_gcs_mean_acc1to6.png')
+    plt.close()
+
 
 #------------------------------------------------------------------------------------------------------
 # plots PEA separation speed vs. GCS axial (d) speed for each date ---> Done hebe
@@ -534,56 +985,56 @@ if pea_sep_speed_vs_gcs_axial_speed:
     plt.savefig(hpath+'/pea_sep_speed_vs_gcs_axial_speed.png')
     plt.close()
 
-    #------------------------------------------------------------------------------------------------------
-# plots PEA mean length vs. GCS lateral (L) speed for each date ---> Done hebe
-if pea_length_vs_gcs_lat_speed:
-    ajuste_lineal2 = False
+#     #------------------------------------------------------------------------------------------------------
+# # plots PEA mean length vs. GCS lateral (L) speed for each date ---> Done hebe
+# if pea_length_vs_gcs_lat_speed:
+#     ajuste_lineal2 = False
 
-    df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
-    all_x=[]
-    all_y=[]
-    colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
-    labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
-    for d in df_ar['datetimes']:
-        d_str = d.strftime('%Y%m%d')
-        x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_lat_vel']))  #cambiar
+#     df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
+#     all_x=[]
+#     all_y=[]
+#     colors = ['k','saddlebrown','brown','r','sandybrown','darkkhaki','lawngreen','mediumspringgreen','mediumturquoise','royalblue','b','mediumblue']
+#     labels = ['20101212','20101214','20110317','20110605','20130123','20130129','20130209','20130424','20130502','20130517','20130527','20130608']
+#     for d in df_ar['datetimes']:
+#         d_str = d.strftime('%Y%m%d')
+#         x = np.array((df_ar.loc[df_ar['datetimes'] == d, 'gcs_lat_vel']))  #cambiar
 
-        if len(x) > 1:
-            x = np.nanmean(x)
-        x = float(x)
+#         if len(x) > 1:
+#             x = np.nanmean(x)
+#         x = float(x)
 
-        y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])#cambiar
-        all_x.append(x)
-        all_y.append(y)
+#         y  = np.mean(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'width fit vel [km/s]'])#cambiar
+#         all_x.append(x)
+#         all_y.append(y)
 
-    all_x = all_x [0:11]
-    all_y = all_y [0:11]
+#     all_x = all_x [0:11]
+#     all_y = all_y [0:11]
 
-    all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
-    all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
-    colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
-    labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
-    #pearson coef and p-value
-    linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
-    slope = linear_regresion.slope
-    intercept = linear_regresion.intercept
-    pearson = linear_regresion.rvalue
-    r_square = pearson*pearson
-    p_value = linear_regresion.pvalue
-    stdev = linear_regresion.stderr
+#     all_x_filtered = drop_by_index(all_x,list_rejected_cmes_id)
+#     all_y_filtered = drop_by_index(all_y,list_rejected_cmes_id)
+#     colors_filtered = drop_by_index(colors,list_rejected_cmes_id)
+#     labels_filtered = drop_by_index(labels,list_rejected_cmes_id)
+#     #pearson coef and p-value
+#     linear_regresion = scipy.stats.linregress(all_x_filtered, all_y_filtered)
+#     slope = linear_regresion.slope
+#     intercept = linear_regresion.intercept
+#     pearson = linear_regresion.rvalue
+#     r_square = pearson*pearson
+#     p_value = linear_regresion.pvalue
+#     stdev = linear_regresion.stderr
 
-    fig,ax = plt.subplots()
-    #ejes y titulo
-    ax.set_xlabel('GCS axial speed [km s$^{-1}]$', fontsize=14)
-    ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
-    ax.set_title('', fontsize=18)
-    for contador in range(len(all_x_filtered)):
-        ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
+#     fig,ax = plt.subplots()
+#     #ejes y titulo
+#     ax.set_xlabel('GCS axial speed [km s$^{-1}]$', fontsize=14)
+#     ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
+#     ax.set_title('', fontsize=18)
+#     for contador in range(len(all_x_filtered)):
+#         ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
 
-    if ajuste_lineal2:
-        x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
-        ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
-    ax.legend(loc="lower right", prop={'size': 8})
-    ax.grid(True)
-    plt.savefig(hpath+'/pea_length_vs_gcs_lat_speed.png')
-    plt.close()
+#     if ajuste_lineal2:
+#         x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
+#         ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
+#     ax.legend(loc="lower right", prop={'size': 8})
+#     ax.grid(True)
+#     plt.savefig(hpath+'/pea_length_vs_gcs_lat_speed.png')
+#     plt.close()

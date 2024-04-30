@@ -10,9 +10,9 @@
 ;-
 
 ;Path to the dir containing /sdo ,/soho and /stereo data directories as well as the /Polar_Observations dir.
-DATA_PATH='/media/gehme/data'
+DATA_PATH='/gehme/data'
 ;Path with our GCS data directories
-GCSD_PATH='/media/gehme/projects/2019_cme_expansion/Polar_Observations/Polar_Documents/francisco/GCSs'
+GCSD_PATH='/gehme/projects/2021_cme_expansion_sources/repo_hebe/2021_cme_expansion_sources/GCSs'
 ; LASCO proc images Path
 LASCO_PATH=DATA_PATH+'/soho/lasco/level_1/c2'
 ;Linux File premissions and format
