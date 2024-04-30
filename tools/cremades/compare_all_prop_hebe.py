@@ -412,7 +412,7 @@ if pea_prop_speed_vs_gcs_lat_speed:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('GCS lateral (L) speed [km s$^{-1}$', fontsize=14)
+    ax.set_xlabel('GCS lateral (L) speed [km s$^{-1}$]', fontsize=14)
     ax.set_ylabel('PEA propagation speed [km s$^{-1}$]', fontsize=14)
     #ax.set_title('Title', fontsize=18)
     for contador in range(len(all_x_filtered)):
@@ -466,7 +466,7 @@ if pea_sep_speed_vs_gcs_awd:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('GCS AW$_D$', fontsize=14)
+    ax.set_xlabel('GCS AW$_D$ -nuevo', fontsize=14)
     ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
     ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):
@@ -520,7 +520,7 @@ if pea_sep_speed_vs_gcs_axial_speed:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('GCS axial speed [km s$^{-1}$', fontsize=14)
+    ax.set_xlabel('GCS axial speed [km s$^{-1}$]', fontsize=14)
     ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
     ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):
@@ -574,7 +574,7 @@ if pea_length_vs_gcs_lat_speed:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('GCS axial speed [km s$^{-1}$', fontsize=14)
+    ax.set_xlabel('GCS axial speed [km s$^{-1}]$', fontsize=14)
     ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
     ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):
