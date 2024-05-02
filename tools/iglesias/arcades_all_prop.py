@@ -3,6 +3,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import numpy as np
 import datetime as dt
+import matplotlib as mpl
+mpl.use('Agg')
 import os
 
 prop_to_plot = ['width fit vel [km/s]','length fit vel [km/s]','tilt fit mean value [deg]']

@@ -16,6 +16,7 @@ from turtle import color
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+mpl.use('Agg')
 import os
 from astropy.coordinates import SkyCoord
 import astropy.units as u
@@ -78,31 +79,33 @@ for f in files:
     # adds df['length3 [arcsec]'] to df['length2 [arcsec]'] where df['length3 [arcsec]'] is not nan, otherwise adds 0
     df['length2+3 [arcsec]'] = df.apply(lambda x: np.array([x['length2 [arcsec]'][i] + x['length3 [arcsec]'][i] if not np.isnan(x['length3 [arcsec]'][i]) else x['length2 [arcsec]'][i] for i in range(len(x['length2 [arcsec]']))]), axis=1)
 
-    # compute the arcade tilt angle using the mean GreatArc of all pairs of footpoints
+    # compute the arcade tilt angle by fitting a line to each group of points
     df['tilt mean [deg]'] = np.nan
     df['tilt sd [deg]'] = np.nan
     df['fp4'] = df.apply(lambda x: [SkyCoord(x['lon2 [arcsec]'][i], x['lat1 [arcsec]'][i], unit='arcsec',frame="heliographic_stonyhurst", observer="earth",  obstime=x['date']) for i in range(len(x['lon2 [arcsec]']))], axis=1)
     for i in range(len(df)):
-        # get the great arc for each pair of footpoints
-        ctilt=[]
-        for j in range(len(df['fp1'][i])):
-            p0= df['fp1'][i][j]
-            p1= df['fp2'][i][j]
-            p2= df['fp4'][i][j]
-            a=GreatArc(p1, p2, points=3)
-            b=GreatArc(p0, p2, points=3)
-            c=GreatArc(p0, p1, points=3)
-            a_ang = float(a.inner_angles()[2].value)
-            b_ang = float(b.inner_angles()[2].value)
-            c_ang = float(c.inner_angles()[2].value)
-            pair_tilt = np.rad2deg(np.arccos((np.cos(a_ang) - np.cos(b_ang) * np.cos(c_ang)) / (np.sin(b_ang) * np.sin(c_ang))))
-            if df['lat2 [arcsec]'][i][j] > df['lat1 [arcsec]'][i][j]:
-                ctilt.append(pair_tilt+90)
-            else:
-                ctilt.append(-pair_tilt+90)
+        p0= df['fp1'][i]
+        # fits a line to lat and lon and gets the tilt from the line slope
+        lat =  np.array([p.lat.arcsec for p in p0])
+        lon =  np.array([p.lon.arcsec for p in p0])
+        z = np.polyfit(lon, lat, 1)
+        tilt_p0 = np.arctan(z[0])*180/np.pi
+        # same for p1
+        p1= df['fp2'][i]
+        lat =  np.array([p.lat.arcsec for p in p1])
+        lon =  np.array([p.lon.arcsec for p in p1])
+        z = np.polyfit(lon, lat, 1)
+        tilt_p1 = np.arctan(z[0])*180/np.pi        
+        # same for p2
+        p2= df['fp4'][i]
+        lat =  np.array([p.lat.arcsec for p in p2])
+        lon =  np.array([p.lon.arcsec for p in p2])
+        z = np.polyfit(lon, lat, 1)
+        tilt_p2 = np.arctan(z[0])*180/np.pi
+        # computes the tilt angle as the mean of the three angles
+        ctilt = np.array([tilt_p0, tilt_p1, tilt_p2])
         df['tilt mean [deg]'][i] = np.mean(ctilt)
         df['tilt sd [deg]'][i] = np.std(ctilt)        
-
 
     ### PLOTS
 
