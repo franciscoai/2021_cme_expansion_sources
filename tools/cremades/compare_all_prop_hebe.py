@@ -584,7 +584,7 @@ if pea_sep_speed_vs_gcs_awd:
     fig,ax = plt.subplots()
     #ejes y titulo
     ax.set_xlabel('GCS AW$_D$', fontsize=14)
-    ax.set_ylabel('PEA mean width [acsec]', fontsize=14)
+    ax.set_ylabel('PEA mean width [arcsec]', fontsize=14)
     ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):
         ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
@@ -640,8 +640,8 @@ if pea_sep_speed_vs_gcs_awd:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('gcs_radial_vel_at6 [km/s]', fontsize=14)
-    ax.set_ylabel('PEA mean width [acsec]', fontsize=14)
+    ax.set_xlabel('gcs_radial_vel_at6 [km s$^{-1}$]', fontsize=14)
+    ax.set_ylabel('PEA mean width [arcsec]', fontsize=14)
     ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):
         ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
@@ -698,8 +698,8 @@ if pea_sep_speed_vs_gcs_awd:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('gcs_radial_vel_at2 [mk/s]', fontsize=14)
-    ax.set_ylabel('PEA mean width [acsec]', fontsize=14)
+    ax.set_xlabel('gcs_radial_vel_at2 [km s$^{-1}$]', fontsize=14)
+    ax.set_ylabel('PEA mean width [arcsec]', fontsize=14)
     ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):
         ax.scatter(all_x_filtered[contador],all_y_filtered[contador],c=colors_filtered[contador],label=labels_filtered[contador],alpha=0.9)
@@ -1252,7 +1252,7 @@ if pea_sep_speed_vs_gcs_axial_speed:
     if ajuste_lineal2:
         x_axis = np.linspace(np.min(all_x_filtered),np.max(all_x_filtered),10)
         ax.plot(x_axis, intercept + slope*x_axis, 'r', label=f'$r2 = {r_square:.2f}$')
-    ax.legend(loc="lower right", prop={'size': 8})
+    ax.legend(loc="best", prop={'size': 8})
     ax.grid(True)
     plt.savefig(hpath+'/pea_prop_speed_vs_gcs_radial_vel_at2.png')
     plt.close()   
