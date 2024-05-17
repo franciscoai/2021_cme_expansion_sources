@@ -90,13 +90,78 @@ for d in df_fil['date']:
             gcs.append(gcs_savs_data)
             gcs_dates.append(d.strftime('%Y%m%d'))
 gcs_keys = bla.sgui.dtype.names  # all keys in sav files
-# computes secondary GCS parameters
-#  awl=2.*(sgui.HAN + asin(sgui.RAT)) *!RAdeg
-#  awd=2.*asin(sgui.RAT) *!RAdeg
 
 # plots
 os.makedirs(opath, exist_ok=True)
-exit
+
+# extracts the following keys=['ERUPTIONDATE', 'LAT','LON', 'ROT','HAN', 'RAT'] from gcs and saves them in a .csv file
+last_gcs_value =[]
+for cd in gcs_dates:
+    print('Extracting GCS data for date...' + cd)
+    gcs_key = ['ERUPTIONDATE', 'LAT','LON', 'ROT','HAN', 'RAT']       
+    gcs_idx = gcs_dates.index(cd)
+    gcs_val = []
+    for sav in gcs[gcs_idx]:
+        gcs_val.append([sav.sgui[key] for key in gcs_key])
+    gcs_val = np.array(gcs_val)[:,:,0]
+    #convert from rad to deg only  LAN, LON, ROT and HAN
+    for i in range(1,5):
+        gcs_val[:,i] = np.rad2deg(gcs_val[:,i].astype(float))
+    # sort by ERUPTIONDATE
+    gcs_times = np.array([dt.datetime.strptime(sav.sgui['ERUPTIONDATE'][0].decode('UTF-8'),'%Y-%m-%dT%H:%M:%S.%f') for sav in gcs[gcs_idx]])
+    ind = np.argsort(gcs_times)
+    gcs_times = gcs_times[ind]
+    gcs_val = gcs_val[ind]
+    np.savetxt(opath+'/'+cd+'_gcs.csv', gcs_val, delimiter=',', header='DATE, LAT, LON, ROT, HAN, RAT', fmt='%s')
+    last_gcs_value.append(gcs_val[-1,:])
+# saves all the last values in a .csv file
+np.savetxt(opath+'/last_gcs_values.csv', np.array(last_gcs_value), delimiter=',', header='DATE, LAT, LON, ROT, HAN, RAT', fmt='%s')
+
+# GCS ratio of R/OH (Axial_Radius/Apex)
+for cd in gcs_dates:
+    print('Plotting R/OH for date...' + cd)
+    gcs_key = 'RAT'        
+    gcs_idx = gcs_dates.index(cd)
+    gcs_val = np.array([float(sav.sgui[gcs_key]) for sav in gcs[gcs_idx]])
+    gcs_val = gcs_val/(1.+gcs_val)
+    gcs_times = np.array([dt.datetime.strptime(sav.sgui['ERUPTIONDATE'][0].decode('UTF-8'),'%Y-%m-%dT%H:%M:%S.%f') for sav in gcs[gcs_idx]])
+    ind = np.argsort(gcs_times)
+    gcs_times = gcs_times[ind]
+    gcs_val = gcs_val[ind] 
+    plt.plot(gcs_times, gcs_val, '*k')
+    plt.title(cd)
+    plt.ylabel('R/OH')
+    plt.xlabel('Date')
+    plt.tight_layout()
+    plt.minorticks_on()
+    plt.tick_params('both', which='both')
+    plt.grid(which='both')
+    plt.savefig(opath+'/'+cd+'_R_OH.png')
+    plt.close()
+    # saves value in a .csv file
+    np.savetxt(opath+'/'+cd+'_R_OH.csv', np.array([gcs_times, gcs_val]).T, delimiter=',', header='date, R/OH', fmt='%s')
+    
+# plots GCS 'RAT' only
+for cd in gcs_dates:
+    print('Plotting RAT for date...' + cd)
+    gcs_key = 'RAT'        
+    gcs_idx = gcs_dates.index(cd)
+    gcs_val = np.array([float(sav.sgui[gcs_key]) for sav in gcs[gcs_idx]])
+    gcs_times = np.array([dt.datetime.strptime(sav.sgui['ERUPTIONDATE'][0].decode('UTF-8'),'%Y-%m-%dT%H:%M:%S.%f') for sav in gcs[gcs_idx]])
+    ind = np.argsort(gcs_times)
+    gcs_times = gcs_times[ind]
+    gcs_val = gcs_val[ind] 
+    plt.plot(gcs_times, gcs_val, '*k')
+    plt.title(cd)
+    plt.ylabel('RAT')
+    plt.xlabel('Date')
+    plt.tight_layout()
+    plt.minorticks_on()
+    plt.tick_params('both', which='both')
+    plt.grid(which='both')
+    plt.savefig(opath+'/'+cd+'_RAT.png')
+    plt.close()
+
 # tilt angles
 df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
 gcs_vs_ar_val = []
@@ -113,11 +178,10 @@ for d in df_fil['date']:
             sign_corr = sign_corr_dates[d_str]
         else:
             sign_corr = [0,0,0]
-        gcs_key = 'ROT'           
+        gcs_key = 'ROT'        
         gcs_idx = gcs_dates.index(d_str)
         gcs_val = np.rad2deg([float(sav.sgui[gcs_key]) for sav in gcs[gcs_idx]]).astype(float)
-        gcs_times = np.array([dt.datetime.strptime(sav.sgui['ERUPTIONDATE'][0].decode('UTF-8'),
-                                                   '%Y-%m-%dT%H:%M:%S.%f') for sav in gcs[gcs_idx]])
+        gcs_times = np.array([dt.datetime.strptime(sav.sgui['ERUPTIONDATE'][0].decode('UTF-8'),'%Y-%m-%dT%H:%M:%S.%f') for sav in gcs[gcs_idx]])
         ind = np.argsort(gcs_times)
         gcs_times = gcs_times[ind]
         gcs_val = gcs_val[ind]         
