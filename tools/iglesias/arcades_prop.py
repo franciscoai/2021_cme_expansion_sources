@@ -25,14 +25,19 @@ from sunpy.coordinates.utils import GreatArc
 #from sunpy.data.sample import AIA_171_IMAGE
 import pandas as pd
 import datetime as dt
+from scipy.optimize import curve_fit
 #from sunpy.coordinates import frames
 
+def linear_func(y, a, b):
+    return a*y + b
+
+########## MAIN ##########
+# constants
 local_path = os.getcwd()
 input_dir = local_path + '/output_data/arcades'
 odir = local_path + '/output_data/arcades/props'
 arcsec2km = 725.27 # 1 arcsec = 725.27 km
 
-##########
 # get .csv files from input_dir
 files = sorted([os.path.join(input_dir,f) for f in os.listdir(input_dir) if f.endswith('.csv')])
 print('Files found:', files)
@@ -83,34 +88,70 @@ for f in files:
     df['tilt mean [deg]'] = np.nan
     df['tilt sd [deg]'] = np.nan
     df['fp4'] = df.apply(lambda x: [SkyCoord(x['lon2 [arcsec]'][i], x['lat1 [arcsec]'][i], unit='arcsec',frame="heliographic_stonyhurst", observer="earth",  obstime=x['date']) for i in range(len(x['lon2 [arcsec]']))], axis=1)
+    all_fits = []
+    all_tilts = []
     for i in range(len(df)):
         p0= df['fp1'][i]
         # fits a line to lat and lon and gets the tilt from the line slope
         lat =  np.array([p.lat.arcsec for p in p0])
         lon =  np.array([p.lon.arcsec for p in p0])
-        z = np.polyfit(lon, lat, 1)
-        tilt_p0 = np.arctan(z[0])*180/np.pi
+        # check if the expected line is too vertical, if so switches lon and lat
+        if np.abs(np.max(lon) - np.min(lon)) < np.abs(np.max(lat) - np.min(lat)):
+            invert_fit = True
+            z1 = curve_fit(linear_func, lat, lon)[0]
+            tilt_p0 = np.arctan(1./z1[0])*180/np.pi            
+        else:
+            invert_fit = False
+            z1 = curve_fit(linear_func, lon, lat)[0]
+            tilt_p0 = np.arctan(z1[0])*180/np.pi              
         # same for p1
         p1= df['fp2'][i]
         lat =  np.array([p.lat.arcsec for p in p1])
         lon =  np.array([p.lon.arcsec for p in p1])
-        z = np.polyfit(lon, lat, 1)
-        tilt_p1 = np.arctan(z[0])*180/np.pi        
+        if invert_fit:
+            z2 = curve_fit(linear_func, lat, lon)[0]
+            tilt_p1 = np.arctan(1./z2[0])*180/np.pi
+        else:
+            z2 = curve_fit(linear_func, lon, lat)[0]
+            tilt_p1 = np.arctan(z2[0])*180/np.pi         
         # same for p2
         p2= df['fp4'][i]
         lat =  np.array([p.lat.arcsec for p in p2])
         lon =  np.array([p.lon.arcsec for p in p2])
-        z = np.polyfit(lon, lat, 1)
-        tilt_p2 = np.arctan(z[0])*180/np.pi
-        # computes the tilt angle as the mean of the three angles
-        ctilt = np.array([tilt_p0, tilt_p1, tilt_p2])
-        df['tilt mean [deg]'][i] = np.mean(ctilt)
-        df['tilt sd [deg]'][i] = np.std(ctilt)        
+        if invert_fit:
+            z3 = curve_fit(linear_func, lat, lon)[0]
+            tilt_p2 = np.arctan(1./z3[0])*180/np.pi
+        else:
+            z3 = curve_fit(linear_func, lon, lat)[0]
+            tilt_p2 = np.arctan(z3[0])*180/np.pi
+        #save all fits
+        all_fits.append([z1, z2, z3, invert_fit])
+        # computes the tilt angle as the mean angle of the two similar arcades
+        # if the angles are mroe than 90 deg apart, adds 180 deg to the angles with the largest absolut value
+        diff = abs(tilt_p0 - tilt_p1)
+        print('**Date:', df['date'][i])
+        print('tilt_p0', tilt_p0, 'tilt_p1', tilt_p1)
+        if diff > 90:
+            if np.abs(tilt_p0) > np.abs(tilt_p1):
+                if tilt_p0 < 0:
+                    tilt_p0 += 180
+                else:
+                    tilt_p0 -= 180
+            else:
+                if tilt_p1 < 0:
+                    tilt_p1 += 180
+                else:
+                    tilt_p1 -= 180
+        diff = np.abs(tilt_p0 - tilt_p1)
+        mean_ang = np.mean([tilt_p0, tilt_p1])
+        df['tilt mean [deg]'][i] = mean_ang
+        df['tilt sd [deg]'][i] = diff       
+        all_tilts.append([tilt_p0, tilt_p1, tilt_p2])        
 
     ### PLOTS
 
-    # creates odir/every file name
-    odir_ev = os.path.join(odir, f.split('/')[-1].replace('.csv', ''))
+    # creates odir/every file name with event date at the end
+    odir_ev = os.path.join(odir, f.split('/')[-1].replace('.csv', '')+'_'+str(df['date'][0].date()))
     os.makedirs(odir_ev, exist_ok=True)
 
     # scatter plot of the footpoints, each group with a diff color
@@ -130,7 +171,30 @@ for f in files:
         plt.gca().set_aspect('equal')
         plt.xlabel('Longitude [arcsec]')
         plt.ylabel('Latitude [arcsec]')
-        plt.title('Arcades footpoints')       
+        # overplots fit line for p0
+        z1 = all_fits[i][0]
+        inverted = all_fits[i][3]
+        if inverted:
+            lon = np.array([fp.lat.arcsec for fp in df['fp1'][i]])
+            p = np.poly1d(z1)
+            plt.plot(p(lon), lon, '--r')
+        else:
+            lon = np.array([fp.lon.arcsec for fp in df['fp1'][i]])
+            p = np.poly1d(z1)
+            plt.plot(lon, p(lon), '--r')                         
+        # overplots fit line for p1
+        z2 = all_fits[i][1]
+        if inverted:
+            lon = np.array([fp.lat.arcsec for fp in df['fp2'][i]])
+            p = np.poly1d(z2)
+            plt.plot(p(lon), lon, '--b')
+        else:
+            lon = np.array([fp.lon.arcsec for fp in df['fp2'][i]])
+            p = np.poly1d(z2)
+            plt.plot(lon, p(lon), '--b')   
+        plt.title('Arcades footpoints for Date: ' + str(df['date'][i]) + 
+                  '\n Angles: Red '+format(all_tilts[i][0], '.2f')+' Blue '+format(all_tilts[i][1], '.2f'))
+
         oimage = os.path.join(odir_ev, f.split('/')[-1].replace('.csv', '_footpoints'+str(i)+'.png'))
         plt.savefig(oimage)
         plt.close()

@@ -24,18 +24,18 @@ from scipy.io import readsav
 
 
 # aux functions
-def correct_ang(iang, flip=0):
-    # corrects the input angle to be in the range -90 to 90 only
-    # param: ang: input angles in deg (numpy array)
-    ang = np.array(iang)
-    ang[(ang < 20)] += 180
-    # if flip == 1:
-    #     ang[(ang < 0)] += 180
-    # else:
-    #     ang[(ang > 90) & (ang <= 270) ] -= 180
-    #     ang[(ang > 270)] -= 360 
-    return ang
-
+def correct_ang(ang_to_correct, reference_ang, do=True):
+    ''' 
+    Returns a scalar: +180, 180 or 0, used to correct ang_to_correct in case its 
+    diference is wrt reference_ang is larger than 140 deg
+    '''
+    if (np.abs(ang_to_correct - reference_ang) > 140) & do:
+        if ang_to_correct < 0:
+            return 180
+        else:
+            return -180   
+    else:
+        return 0      
 
 # main
 local_path = os.getcwd()
@@ -56,7 +56,7 @@ arcades_file = repo_path + '/output_data/arcades/props/all_arcades_props.csv'
 
 # constants
 # dates and sources [gcs,fil,ar] to flip tilt angle signs if angle >80 deg
-sign_corr_dates = {'20130209': [1, 0, 0], '20130517': [1, 0, 0], '20130502': [0, 0, 1], '20110317': [0, 1, 0]}
+do_tilt_corr = True
 
 ##########
 
@@ -174,24 +174,19 @@ for d in df_fil['date']:
     d_str = d.strftime('%Y%m%d')
     print('Plotting tilt angles for date...' + d_str)
     if d_str in gcs_dates:
-        if d_str in sign_corr_dates:
-            sign_corr = sign_corr_dates[d_str]
-        else:
-            sign_corr = [0,0,0]
-        gcs_key = 'ROT'        
+        gcs_key = 'ROT'  # TODO REMOVE ME!!!!!!!!!!!!!!!!!!!      
         gcs_idx = gcs_dates.index(d_str)
         gcs_val = np.rad2deg([float(sav.sgui[gcs_key]) for sav in gcs[gcs_idx]]).astype(float)
         gcs_times = np.array([dt.datetime.strptime(sav.sgui['ERUPTIONDATE'][0].decode('UTF-8'),'%Y-%m-%dT%H:%M:%S.%f') for sav in gcs[gcs_idx]])
         ind = np.argsort(gcs_times)
         gcs_times = gcs_times[ind]
         gcs_val = gcs_val[ind]         
-        gcs_val = correct_ang(gcs_val, flip=1)
         plt.plot(gcs_times, gcs_val, '*k', label='GCS')  
         x1 = d.to_pydatetime()
         y1 = df_fil.loc[df_fil['date'] == d, 'tilt_angle']         
         if len(y1) > 0:
             y1 = np.array(y1).astype(float)[0]
-            y1 = correct_ang(y1, flip=1)
+            y1 += correct_ang(np.median(y1),np.median(gcs_val), do=do_tilt_corr)
             plt.plot(x1, y1, 'sk', label='FIL')
             gcs_vs_fil_all.append([gcs_val[0], y1])
             gcs_times = np.concatenate((gcs_times, x1), axis=None)
@@ -200,20 +195,21 @@ for d in df_fil['date']:
         y2 = df_ar.loc[df_ar['ar_time_tilt'].dt.date == d.date(), 'ar_tilt']
         if len(y2) > 0:
             y2 = np.array(y2).astype(float)[0]
-            y2 = correct_ang(y2, flip=1)
+            y2 += correct_ang(np.median(y2),np.median(gcs_val), do=do_tilt_corr)
             plt.plot(x2, y2, '^k', label='AR')
             gcs_vs_ar_val.append([gcs_val[0], y2])
             gcs_times = np.concatenate((gcs_times, [i.to_pydatetime() for i in x2]), axis=None)
             gcs_val = np.concatenate((gcs_val, y2), axis=None)       
         #adds arcade mean titls
         x3 = df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'date']
-        y3 = df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'tilt mean [deg]']
-        # subtracts 180 if y3 is larger than 90
-        y3 = np.array(y3).astype(float)
-        y3 = correct_ang(y3, flip=0)
+        y3 = np.array(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'tilt mean [deg]']).astype(float)
+        # corrects if the diference is > 90 deg
+        y3 += correct_ang(np.median(y3),np.median(gcs_val), do=do_tilt_corr)
         # gcs rotation vs arcade
         cdiff = float(np.abs(gcs_val[-1] - np.mean(y3)))
-        if cdiff > 90:
+        if cdiff > 140:
+            if do_tilt_corr:
+                print('****************ERROR, you should not be here')
             cdiff= 180 - cdiff
         diff_all.append(cdiff)
         diff_dates.append(d)
@@ -236,7 +232,7 @@ for d in df_fil['date']:
         #plt.ylim([-180., 180.])
         plt.tick_params('both', which='both')
         plt.grid(which='both')
-        plt.savefig(opath+'/'+d_str+'_'+gcs_key+'.png')
+        plt.savefig(opath+'/'+d_str+'_'+gcs_key+'_ang_corr'+str(do_tilt_corr)+'.png')
         plt.close()
 
 gcs_vs_fil_all = np.array(gcs_vs_fil_all)
