@@ -19,4 +19,4 @@ for prop in prop_to_plot:
     plt.xlabel('event')
     plt.title(prop)
     plt.savefig(local_path + '/output_data/arcades/props/'+prop[0:-6]+'.png')
-
+print('Done :-)')
