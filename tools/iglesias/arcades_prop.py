@@ -147,7 +147,14 @@ for f in files:
         df['tilt mean [deg]'][i] = mean_ang
         df['tilt sd [deg]'][i] = diff       
         all_tilts.append([tilt_p0, tilt_p1, tilt_p2])        
-
+    # corrects tilts that are >140 deg appart wrt median
+    median_tilt = df['tilt mean [deg]'].median()
+    for i in range(len(df)):
+        if np.abs(df['tilt mean [deg]'][i] - median_tilt) > 140:
+            if df['tilt mean [deg]'][i] < 0:
+                df['tilt mean [deg]'][i] += 180
+            else:
+                df['tilt mean [deg]'][i] -= 180
     ### PLOTS
 
     # creates odir/every file name with event date at the end

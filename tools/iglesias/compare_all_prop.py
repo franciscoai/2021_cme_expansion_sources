@@ -22,14 +22,15 @@ import pandas as pd
 import datetime as dt
 from scipy.io import readsav
 
+ROT_DIFF = 140 # defines the limit to correct the tilt angle in case the diference is larger than this value
 
 # aux functions
 def correct_ang(ang_to_correct, reference_ang, do=True):
     ''' 
     Returns a scalar: +180, 180 or 0, used to correct ang_to_correct in case its 
-    diference is wrt reference_ang is larger than 140 deg
+    diference is wrt reference_ang is larger than ROT_DIFF deg
     '''
-    if (np.abs(ang_to_correct - reference_ang) > 140) & do:
+    if (np.abs(ang_to_correct - reference_ang) > ROT_DIFF) & do:
         if ang_to_correct < 0:
             return 180
         else:
@@ -163,6 +164,9 @@ for cd in gcs_dates:
     plt.close()
 
 # tilt angles
+gcs_ind_to_use=-1 # which gcs value to use in the scatter plot, -1 is the last one in time
+arcade_ind_to_use=-1 # which arcade value to use in the scatter plot, -1 is the last one in time
+
 df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
 gcs_vs_ar_val = []
 gcs_vs_fil_all = []
@@ -174,7 +178,7 @@ for d in df_fil['date']:
     d_str = d.strftime('%Y%m%d')
     print('Plotting tilt angles for date...' + d_str)
     if d_str in gcs_dates:
-        gcs_key = 'ROT'  # TODO REMOVE ME!!!!!!!!!!!!!!!!!!!      
+        gcs_key = 'ROT'
         gcs_idx = gcs_dates.index(d_str)
         gcs_val = np.rad2deg([float(sav.sgui[gcs_key]) for sav in gcs[gcs_idx]]).astype(float)
         gcs_times = np.array([dt.datetime.strptime(sav.sgui['ERUPTIONDATE'][0].decode('UTF-8'),'%Y-%m-%dT%H:%M:%S.%f') for sav in gcs[gcs_idx]])
@@ -188,7 +192,7 @@ for d in df_fil['date']:
             y1 = np.array(y1).astype(float)[0]
             y1 += correct_ang(np.median(y1),np.median(gcs_val), do=do_tilt_corr)
             plt.plot(x1, y1, 'sk', label='FIL')
-            gcs_vs_fil_all.append([gcs_val[0], y1])
+            gcs_vs_fil_all.append([gcs_val[arcade_ind_to_use], y1])
             gcs_times = np.concatenate((gcs_times, x1), axis=None)
             gcs_val = np.concatenate((gcs_val, y1), axis=None)
         x2 = df_ar.loc[df_ar['ar_time_tilt'].dt.date == d.date(), 'ar_time_tilt']
@@ -197,31 +201,37 @@ for d in df_fil['date']:
             y2 = np.array(y2).astype(float)[0]
             y2 += correct_ang(np.median(y2),np.median(gcs_val), do=do_tilt_corr)
             plt.plot(x2, y2, '^k', label='AR')
-            gcs_vs_ar_val.append([gcs_val[0], y2])
+            gcs_vs_ar_val.append([gcs_val[arcade_ind_to_use], y2])
             gcs_times = np.concatenate((gcs_times, [i.to_pydatetime() for i in x2]), axis=None)
             gcs_val = np.concatenate((gcs_val, y2), axis=None)       
         #adds arcade mean titls
         x3 = df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'date']
         y3 = np.array(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'tilt mean [deg]']).astype(float)
-        # corrects if the diference is > 90 deg
-        y3 += correct_ang(np.median(y3),np.median(gcs_val), do=do_tilt_corr)
-        # gcs rotation vs arcade
-        cdiff = float(np.abs(gcs_val[-1] - np.mean(y3)))
-        if cdiff > 140:
-            if do_tilt_corr:
-                print('****************ERROR, you should not be here')
-            cdiff= 180 - cdiff
-        diff_all.append(cdiff)
-        diff_dates.append(d)
-        gcs_param = np.array((df_ar.loc[df_ar['datetimes'].dt.date == d.date(), 'gcs_lat_vel']))
-        if len(gcs_param) > 0:
-            gcs_param = np.nanmean(gcs_param)
-        diff_gcs_param_all.append(float(gcs_param))
-        plt.plot(x3, y3, 'ok', label='Arcades')
-        gcs_vs_arcades_all.append([gcs_val[0], y3[0]])
+        if len(y3) > 0:     
+            # corrects if the diference is > 140 deg
+            y3 += correct_ang(np.median(y3),np.median(gcs_val), do=do_tilt_corr)
+            # gcs rotation vs arcade
+            cdiff = float(np.abs(gcs_val[arcade_ind_to_use] - y3[arcade_ind_to_use]))
+            if cdiff > ROT_DIFF:
+                if do_tilt_corr:
+                    print('****************ERROR, you should not be here. Date...' + d_str)
+                cdiff= 180 - cdiff
+            diff_all.append(cdiff)
+            diff_dates.append(d)
+            gcs_param = np.array((df_ar.loc[df_ar['datetimes'].dt.date == d.date(), 'gcs_lat_vel']))
+            if len(gcs_param) > 0:
+                gcs_param = np.nanmean(gcs_param)
+                diff_gcs_param_all.append(float(gcs_param))
+                plt.plot(x3, y3, 'ok', label='Arcades')
+                gcs_vs_arcades_all.append([gcs_val[arcade_ind_to_use], y3[arcade_ind_to_use]])            
+            else:
+                diff_gcs_param_all.append(None)
+                gcs_vs_arcades_all.append([None, None]) 
+                print('No gcs_lat_vel for date...' + d_str)
+                pass
         ind = np.argsort(gcs_times)
         gcs_times = gcs_times[ind]
-        gcs_val = gcs_val[ind]
+        #gcs_val = gcs_val[ind]
         #plt.plot(gcs_times, gcs_val, '--k')
         plt.title(str(d))
         plt.ylabel('Tilt angle [deg]')
@@ -238,13 +248,13 @@ for d in df_fil['date']:
 gcs_vs_fil_all = np.array(gcs_vs_fil_all)
 gcs_vs_ar_val = np.array(gcs_vs_ar_val)
 gcs_vs_arcades_all = np.array(gcs_vs_arcades_all)
-plt.scatter(gcs_vs_fil_all[:, 0], gcs_vs_fil_all[:, 1], color='b', label='gcs vs fil')
-plt.scatter(gcs_vs_ar_val[:, 0], gcs_vs_ar_val[:, 1], color='r', label='gcs vs ar')
-plt.scatter(gcs_vs_arcades_all[:, 0], gcs_vs_arcades_all[:, 1], color='g', label='gcs vs arcades')
-plt.ylabel('fil/ar [deg]')
-plt.xlabel('gcs [deg]')  
-#plt.xlim([-90, 90])
-#plt.ylim([-90, 90])
+plt.scatter(gcs_vs_fil_all[:, 1], gcs_vs_fil_all[:, 0], color='b', label='gcs vs fil')
+plt.scatter(gcs_vs_ar_val[:, 1], gcs_vs_ar_val[:, 0], color='r', label='gcs vs ar')
+plt.scatter(gcs_vs_arcades_all[:, 1], gcs_vs_arcades_all[:, 0], color='g', label='gcs vs arcades')
+plt.xlabel('fil/ar/arcade [deg]')
+plt.ylabel('gcs [deg]')  
+#plt.xlim([-110, 110])
+#plt.ylim([-110, 110])
 plt.legend()
 plt.savefig(opath+'/gcs_tilt_vs_fil-ar-arcade.png')
 plt.close()
