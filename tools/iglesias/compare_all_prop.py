@@ -164,8 +164,8 @@ for cd in gcs_dates:
     plt.close()
 
 # tilt angles
-gcs_ind_to_use=-1 # which gcs value to use in the scatter plot, -1 is the last one in time
-arcade_ind_to_use=-1 # which arcade value to use in the scatter plot, -1 is the last one in time
+gcs_ind_to_use=0#-1 # which gcs value to use in the scatter plot, -1 is the last one in time
+arcade_ind_to_use=0#-1 # which arcade value to use in the scatter plot, -1 is the last one in time
 
 df_ar['datetimes'] = pd.to_datetime(df_ar['Date'], format='%d/%m/%Y')
 gcs_vs_ar_val = []
@@ -192,18 +192,23 @@ for d in df_fil['date']:
             y1 = np.array(y1).astype(float)[0]
             y1 += correct_ang(np.median(y1),np.median(gcs_val), do=do_tilt_corr)
             plt.plot(x1, y1, 'sk', label='FIL')
-            gcs_vs_fil_all.append([gcs_val[arcade_ind_to_use], y1])
-            gcs_times = np.concatenate((gcs_times, x1), axis=None)
-            gcs_val = np.concatenate((gcs_val, y1), axis=None)
+            gcs_vs_fil_all.append([gcs_val[arcade_ind_to_use], y1, d_str])
+            #gcs_times = np.concatenate((gcs_times, x1), axis=None)
+            #gcs_val = np.concatenate((gcs_val, y1), axis=None)
         x2 = df_ar.loc[df_ar['ar_time_tilt'].dt.date == d.date(), 'ar_time_tilt']
         y2 = df_ar.loc[df_ar['ar_time_tilt'].dt.date == d.date(), 'ar_tilt']
         if len(y2) > 0:
             y2 = np.array(y2).astype(float)[0]
             y2 += correct_ang(np.median(y2),np.median(gcs_val), do=do_tilt_corr)
+            # put y2 in -90 to 90 range
+            if y2 > 90:
+                y2 = y2 - 180
+            if y2 < -90:
+                y2 = y2 + 180
             plt.plot(x2, y2, '^k', label='AR')
-            gcs_vs_ar_val.append([gcs_val[arcade_ind_to_use], y2])
-            gcs_times = np.concatenate((gcs_times, [i.to_pydatetime() for i in x2]), axis=None)
-            gcs_val = np.concatenate((gcs_val, y2), axis=None)       
+            gcs_vs_ar_val.append([gcs_val[arcade_ind_to_use], y2, d_str])
+            #gcs_times = np.concatenate((gcs_times, [i.to_pydatetime() for i in x2]), axis=None)
+            #gcs_val = np.concatenate((gcs_val, y2), axis=None)       
         #adds arcade mean titls
         x3 = df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'date']
         y3 = np.array(df_arcades.loc[df_arcades['date'].dt.date == d.date(), 'tilt mean [deg]']).astype(float)
@@ -223,14 +228,14 @@ for d in df_fil['date']:
                 gcs_param = np.nanmean(gcs_param)
                 diff_gcs_param_all.append(float(gcs_param))
                 plt.plot(x3, y3, 'ok', label='Arcades')
-                gcs_vs_arcades_all.append([gcs_val[arcade_ind_to_use], y3[arcade_ind_to_use]])            
+                gcs_vs_arcades_all.append([gcs_val[arcade_ind_to_use], y3[arcade_ind_to_use], d_str])            
             else:
                 diff_gcs_param_all.append(None)
                 gcs_vs_arcades_all.append([None, None]) 
                 print('No gcs_lat_vel for date...' + d_str)
                 pass
-        ind = np.argsort(gcs_times)
-        gcs_times = gcs_times[ind]
+        #ind = np.argsort(gcs_times)
+        #gcs_times = gcs_times[ind]
         #gcs_val = gcs_val[ind]
         #plt.plot(gcs_times, gcs_val, '--k')
         plt.title(str(d))
@@ -245,17 +250,32 @@ for d in df_fil['date']:
         plt.savefig(opath+'/'+d_str+'_'+gcs_key+'_ang_corr'+str(do_tilt_corr)+'.png')
         plt.close()
 
-gcs_vs_fil_all = np.array(gcs_vs_fil_all)
-gcs_vs_ar_val = np.array(gcs_vs_ar_val)
-gcs_vs_arcades_all = np.array(gcs_vs_arcades_all)
-plt.scatter(gcs_vs_fil_all[:, 1], gcs_vs_fil_all[:, 0], color='b', label='gcs vs fil')
-plt.scatter(gcs_vs_ar_val[:, 1], gcs_vs_ar_val[:, 0], color='r', label='gcs vs ar')
-plt.scatter(gcs_vs_arcades_all[:, 1], gcs_vs_arcades_all[:, 0], color='g', label='gcs vs arcades')
+#scatter plots
+gcs_vs_ar_val_arr = np.array(gcs_vs_ar_val)[:,0:2].astype(float)
+gcs_vs_fil_all_arr = np.array(gcs_vs_fil_all)[:,0:2].astype(float)
+gcs_vs_arcades_all_arr = np.array(gcs_vs_arcades_all)[:,0:2].astype(float)
+
+plt.scatter(gcs_vs_ar_val_arr[:, 1], gcs_vs_ar_val_arr[:, 0], color='r', label='gcs vs ar')
+plt.scatter(gcs_vs_fil_all_arr[:, 1], gcs_vs_fil_all_arr[:, 0], color='b', label='gcs vs fil')
+plt.scatter(gcs_vs_arcades_all_arr[:, 1], gcs_vs_arcades_all_arr[:, 0], color='g', label='gcs vs arcades')
+
 plt.xlabel('fil/ar/arcade [deg]')
-plt.ylabel('gcs [deg]')  
-#plt.xlim([-110, 110])
-#plt.ylim([-110, 110])
+plt.ylabel('gcs [deg]') 
+plt.tight_layout()
+plt.xlim([-110, 110])
+plt.ylim([-110, 110])
+plt.grid(which='both')
 plt.legend()
+plt.savefig(opath+'/gcs_tilt_vs_fil-ar-arcade_clean.png') 
+# annotate dates in each point
+# for i, txt in enumerate(gcs_vs_ar_val):
+#     plt.annotate(txt[2], (gcs_vs_ar_val_arr[i, 1], gcs_vs_ar_val_arr[i, 0]))
+# for i, txt in enumerate(gcs_vs_fil_all):
+#     plt.annotate(txt[2], (gcs_vs_fil_all_arr[i, 1], gcs_vs_fil_all_arr[i, 0]))
+for i, txt in enumerate(gcs_vs_arcades_all):
+    plt.annotate(txt[2], (gcs_vs_arcades_all_arr[i, 1], gcs_vs_arcades_all_arr[i, 0]))
+# grid for minor ticks behind the plot
+plt.minorticks_on()
 plt.savefig(opath+'/gcs_tilt_vs_fil-ar-arcade.png')
 plt.close()
 
