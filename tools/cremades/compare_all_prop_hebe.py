@@ -889,7 +889,7 @@ if pea_sep_speed_vs_gcs_axial_speed:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('gcs_radial_vel_at2 [km s$^{-1}$]', fontsize=14)
+    ax.set_xlabel('GCS radial speed at 2 R$_{\odot}$ [km s$^{-1}$]', fontsize=14)
     ax.set_ylabel('PEA separation speed [km s$^{-1}$]', fontsize=14)
     ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):
@@ -1243,7 +1243,7 @@ if pea_sep_speed_vs_gcs_axial_speed:
 
     fig,ax = plt.subplots()
     #ejes y titulo
-    ax.set_xlabel('gcs_radial_vel_at2 [km s$^{-1}$]', fontsize=14)
+    ax.set_xlabel('GCS radial speed at 2 R$_{\odot}$ [km s$^{-1}$]', fontsize=14)
     ax.set_ylabel('PEA propagation speed [km s$^{-1}$]', fontsize=14)
     ax.set_title('', fontsize=18)
     for contador in range(len(all_x_filtered)):

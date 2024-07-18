@@ -10,8 +10,8 @@ import numpy as np
 
 # Constants
 # Event to process
-id = 11
-overwrite = True # if True, the output file will be overwritten if it already exists
+id = 4
+overwrite = False # if True, the output file will be overwritten if it already exists
 # time difference of the differential images in seconds
 img_time_diff = 60.*30.
 # minima cadence of the differential images in seconds, use None to keep all the images

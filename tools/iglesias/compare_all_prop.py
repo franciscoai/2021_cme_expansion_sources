@@ -255,12 +255,12 @@ gcs_vs_ar_val_arr = np.array(gcs_vs_ar_val)[:,0:2].astype(float)
 gcs_vs_fil_all_arr = np.array(gcs_vs_fil_all)[:,0:2].astype(float)
 gcs_vs_arcades_all_arr = np.array(gcs_vs_arcades_all)[:,0:2].astype(float)
 
-plt.scatter(gcs_vs_ar_val_arr[:, 1], gcs_vs_ar_val_arr[:, 0], color='r', label='gcs vs ar')
-plt.scatter(gcs_vs_fil_all_arr[:, 1], gcs_vs_fil_all_arr[:, 0], color='b', label='gcs vs fil')
-plt.scatter(gcs_vs_arcades_all_arr[:, 1], gcs_vs_arcades_all_arr[:, 0], color='g', label='gcs vs arcades')
+plt.scatter(gcs_vs_ar_val_arr[:, 1], gcs_vs_ar_val_arr[:, 0], color='r', label='GCS vs. AR')
+plt.scatter(gcs_vs_fil_all_arr[:, 1], gcs_vs_fil_all_arr[:, 0], color='b', label='GCS vs. Filament')
+plt.scatter(gcs_vs_arcades_all_arr[:, 1], gcs_vs_arcades_all_arr[:, 0], color='g', label='GCS vs. PEA')
 
-plt.xlabel('fil/ar/arcade [deg]')
-plt.ylabel('gcs [deg]') 
+plt.xlabel('Source Region Tilt [deg]')
+plt.ylabel('GCS Tilt [deg]') 
 plt.tight_layout()
 plt.xlim([-110, 110])
 plt.ylim([-110, 110])
@@ -280,6 +280,9 @@ plt.savefig(opath+'/gcs_tilt_vs_fil-ar-arcade.png')
 plt.close()
 
 #plots diff vs date
+
+
+
 diff_all = np.array(diff_all)
 plt.scatter(diff_gcs_param_all, diff_all)
 plt.savefig(opath+'/diff_titl_gcs_vs_gcs_param.png')
