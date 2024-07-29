@@ -137,12 +137,12 @@ for cd in gcs_dates:
     h_leg = h_leg[ind]
     plt.plot(gcs_times, oh, '*k', label='OH')
     plt.plot(gcs_times, r, 'sk', label='R')
-    ohmr = oh -r
-    plt.plot(gcs_times, ohmr, '^k', label='OH-R')
-    ohmrm1 = oh -r -1
-    plt.plot(gcs_times, ohmrm1, 'ok', label='OH-R-1')
-    roh = r / h_leg
-    plt.plot(gcs_times, roh, 'ok', label='R/h')
+    oc = oh -r
+    plt.plot(gcs_times, oc, '^k', label='OH-R')
+    ocm1 = oh -r -1
+    plt.plot(gcs_times, ocm1, 'ok', label='OH-R-1')
+    roocm1 = r / h_leg
+    plt.plot(gcs_times, roocm1, 'ok', label='R/(OH-R-1)')
     plt.plot()
     plt.title(cd)
     plt.xlabel('Date')
@@ -154,7 +154,7 @@ for cd in gcs_dates:
     plt.savefig(opath+'/'+cd+'_R_OH.png')
     plt.close()
     # saves value in a .csv file
-    np.savetxt(opath+'/'+cd+'_R_OH.csv', np.array([gcs_times, r, oh,ohmr,ohmrm1,roh]).T, delimiter=',', header='DATE, R, OH, OH-R, OH-R-1, R/h', fmt='%s')
+    np.savetxt(opath+'/'+cd+'_R_OH.csv', np.array([gcs_times, r, oh,oc,ocm1,roocm1]).T, delimiter=',', header='DATE, R, OH, OH-R, OH-R-1, R/(OH-R-1)', fmt='%s')
     
 # plots GCS 'RAT' only
 for cd in gcs_dates:
