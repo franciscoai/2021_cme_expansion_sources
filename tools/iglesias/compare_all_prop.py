@@ -141,16 +141,21 @@ for cd in gcs_dates:
     plt.plot(gcs_times, oc, '^k', label='OH-R')
     ocm1 = oh -r -1
     plt.plot(gcs_times, ocm1, 'ok', label='OH-R-1')
-    roocm1 = r / h_leg
-    plt.plot(gcs_times, roocm1, 'ok', label='R/(OH-R-1)')
-    plt.plot()
+    # horizontal tick labes rotated 45 deg
+    plt.xticks(rotation=45)    
     plt.title(cd)
     plt.xlabel('Date')
-    plt.tight_layout()
+    plt.ylabel('R, OH, OH-R, OH-R-1')
     plt.minorticks_on()
     plt.tick_params('both', which='both')
     plt.grid(which='both')
     plt.legend()
+    # adds another y axis to the right
+    ax2 = plt.gca().twinx()
+    roocm1 = r / h_leg
+    ax2.plot(gcs_times, roocm1, '-+k')
+    ax2.set_ylabel('R/(OH-R-1)')
+    plt.tight_layout()   
     plt.savefig(opath+'/'+cd+'_R_OH.png')
     plt.close()
     # saves value in a .csv file
