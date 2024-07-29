@@ -99,7 +99,7 @@ os.makedirs(opath, exist_ok=True)
 last_gcs_value =[]
 for cd in gcs_dates:
     print('Extracting GCS data for date...' + cd)
-    gcs_key = ['ERUPTIONDATE', 'LAT','LON', 'ROT','HAN', 'RAT']       
+    gcs_key = ['ERUPTIONDATE', 'LAT','LON', 'ROT','HAN', 'RAT','HGT']       
     gcs_idx = gcs_dates.index(cd)
     gcs_val = []
     for sav in gcs[gcs_idx]:
@@ -113,34 +113,48 @@ for cd in gcs_dates:
     ind = np.argsort(gcs_times)
     gcs_times = gcs_times[ind]
     gcs_val = gcs_val[ind]
-    np.savetxt(opath+'/'+cd+'_gcs.csv', gcs_val, delimiter=',', header='DATE, LAT, LON, ROT, HAN, RAT', fmt='%s')
+    np.savetxt(opath+'/'+cd+'_gcs.csv', gcs_val, delimiter=',', header='DATE, LAT, LON, ROT, HAN, RAT, HGT', fmt='%s')
     last_gcs_value.append(gcs_val[-1,:])
 # saves all the last values in a .csv file
-np.savetxt(opath+'/last_gcs_values.csv', np.array(last_gcs_value), delimiter=',', header='DATE, LAT, LON, ROT, HAN, RAT', fmt='%s')
+np.savetxt(opath+'/last_gcs_values.csv', np.array(last_gcs_value), delimiter=',', header='DATE, LAT, LON, ROT, HAN, RAT, HGT', fmt='%s')
 
 # GCS ratio of R/OH (Axial_Radius/Apex)
 for cd in gcs_dates:
-    print('Plotting R/OH for date...' + cd)
-    gcs_key = 'RAT'        
+    print('Plotting R, OH for date...' + cd)
     gcs_idx = gcs_dates.index(cd)
-    gcs_val = np.array([float(sav.sgui[gcs_key]) for sav in gcs[gcs_idx]])
-    gcs_val = gcs_val/(1.+gcs_val)
+    k = np.array([float(sav.sgui['RAT']) for sav in gcs[gcs_idx]])
+    alpha = np.array([float(sav.sgui['HAN']) for sav in gcs[gcs_idx]])
+    oh = np.array([float(sav.sgui['HGT']) for sav in gcs[gcs_idx]])
+    h_leg = oh * (1-k) / (1/np.cos(alpha) + np.tan(alpha))
+    beta = h_leg / np.cos(alpha)
+    rho = h_leg * np.tan(alpha)
+    r = k*(beta+rho)/(1-k**2)
     gcs_times = np.array([dt.datetime.strptime(sav.sgui['ERUPTIONDATE'][0].decode('UTF-8'),'%Y-%m-%dT%H:%M:%S.%f') for sav in gcs[gcs_idx]])
     ind = np.argsort(gcs_times)
     gcs_times = gcs_times[ind]
-    gcs_val = gcs_val[ind] 
-    plt.plot(gcs_times, gcs_val, '*k')
+    oh = oh[ind]
+    r = r[ind]
+    h_leg = h_leg[ind]
+    plt.plot(gcs_times, oh, '*k', label='OH')
+    plt.plot(gcs_times, r, 'sk', label='R')
+    ohmr = oh -r
+    plt.plot(gcs_times, ohmr, '^k', label='OH-R')
+    ohmrm1 = oh -r -1
+    plt.plot(gcs_times, ohmrm1, 'ok', label='OH-R-1')
+    roh = r / h_leg
+    plt.plot(gcs_times, roh, 'ok', label='R/h')
+    plt.plot()
     plt.title(cd)
-    plt.ylabel('R/OH')
     plt.xlabel('Date')
     plt.tight_layout()
     plt.minorticks_on()
     plt.tick_params('both', which='both')
     plt.grid(which='both')
+    plt.legend()
     plt.savefig(opath+'/'+cd+'_R_OH.png')
     plt.close()
     # saves value in a .csv file
-    np.savetxt(opath+'/'+cd+'_R_OH.csv', np.array([gcs_times, gcs_val]).T, delimiter=',', header='date, R/OH', fmt='%s')
+    np.savetxt(opath+'/'+cd+'_R_OH.csv', np.array([gcs_times, r, oh,ohmr,ohmrm1,roh]).T, delimiter=',', header='DATE, R, OH, OH-R, OH-R-1, R/h', fmt='%s')
     
 # plots GCS 'RAT' only
 for cd in gcs_dates:
